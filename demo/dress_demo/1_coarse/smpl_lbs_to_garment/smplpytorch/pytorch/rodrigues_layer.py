@@ -69,7 +69,7 @@ if __name__ == '__main__':
     inputs = torch.rand(args.batch_size, rot)
     inputs_var = Variable(inputs.double(), requires_grad=True)
     if args.cuda:
-        inputs = inputs.cuda()
+        inputs = inputs.cpu()
     # outputs = batch_rodrigues(inputs)
     test_function = gradcheck(batch_rodrigues, (inputs_var, ))
     print('batch test passed !')

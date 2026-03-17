@@ -127,7 +127,7 @@ def vertices2landmarks(vertices, faces, lmk_faces_idx, lmk_bary_coords):
     lmk_faces = torch.index_select(faces, 0, lmk_faces_idx.view(-1)).view(batch_size, -1, 3)
 
     lmk_faces += torch.arange(batch_size, dtype=torch.long,
-                              device=device).view(-1, 1, 1) * num_verts
+                              device='cpu').view(-1, 1, 1) * num_verts
 
     lmk_vertices = vertices.view(-1, 3)[lmk_faces].view(batch_size, -1, 3, 3)
 
@@ -252,7 +252,7 @@ def lbs(
 
     # 3. Add pose blend shapes
     # N x J x 3 x 3
-    ident = torch.eye(3, dtype=dtype, device=device)
+    ident = torch.eye(3, dtype=dtype, device='cpu')
     if pose2rot:
         if pose.numel() == batch_size * 24 * 4:
             rot_mats = quat_to_rotmat(pose.reshape(batch_size * 24,
@@ -283,7 +283,7 @@ def lbs(
     T = torch.matmul(W, A.view(batch_size, num_joints, 16)) \
         .view(batch_size, -1, 4, 4)
 
-    homogen_coord = torch.ones([batch_size, v_posed.shape[1], 1], dtype=dtype, device=device)
+    homogen_coord = torch.ones([batch_size, v_posed.shape[1], 1], dtype=dtype, device='cpu')
     v_posed_homo = torch.cat([v_posed, homogen_coord], dim=2)
     v_homo = torch.matmul(T, torch.unsqueeze(v_posed_homo, dim=-1))
 
@@ -365,7 +365,7 @@ def hybrik(
     if leaf_thetas is not None:
         rest_J = vertices2joints(J_regressor, v_shaped)
     else:
-        rest_J = torch.zeros((v_shaped.shape[0], 29, 3), dtype=dtype, device=device)
+        rest_J = torch.zeros((v_shaped.shape[0], 29, 3), dtype=dtype, device='cpu')
         rest_J[:, :24] = vertices2joints(J_regressor, v_shaped)
 
         leaf_number = [411, 2445, 5905, 3216, 6617]
@@ -408,7 +408,7 @@ def hybrik(
     # assert torch.mean(torch.abs(rotate_rest_pose - J_transformed)) < 1e-5
     # 4. Add pose blend shapes
     # rot_mats: N x (J + 1) x 3 x 3
-    ident = torch.eye(3, dtype=dtype, device=device)
+    ident = torch.eye(3, dtype=dtype, device='cpu')
     pose_feature = (rot_mats[:, 1:] - ident).view([batch_size, -1])
     pose_offsets = torch.matmul(pose_feature, posedirs) \
         .view(batch_size, -1, 3)
@@ -423,7 +423,7 @@ def hybrik(
     T = torch.matmul(W, A.view(batch_size, num_joints, 16)) \
         .view(batch_size, -1, 4, 4)
 
-    homogen_coord = torch.ones([batch_size, v_posed.shape[1], 1], dtype=dtype, device=device)
+    homogen_coord = torch.ones([batch_size, v_posed.shape[1], 1], dtype=dtype, device='cpu')
     v_posed_homo = torch.cat([v_posed, homogen_coord], dim=2)
     v_homo = torch.matmul(T, torch.unsqueeze(v_posed_homo, dim=-1))
 
@@ -503,13 +503,13 @@ def batch_rodrigues(rot_vecs, epsilon=1e-8, dtype=torch.float32):
 
     # Bx1 arrays
     rx, ry, rz = torch.split(rot_dir, 1, dim=1)
-    K = torch.zeros((batch_size, 3, 3), dtype=dtype, device=device)
+    K = torch.zeros((batch_size, 3, 3), dtype=dtype, device='cpu')
 
-    zeros = torch.zeros((batch_size, 1), dtype=dtype, device=device)
+    zeros = torch.zeros((batch_size, 1), dtype=dtype, device='cpu')
     K = torch.cat([zeros, -rz, ry, rz, zeros, -rx, -ry, rx, zeros], dim=1) \
         .view((batch_size, 3, 3))
 
-    ident = torch.eye(3, dtype=dtype, device=device).unsqueeze(dim=0)
+    ident = torch.eye(3, dtype=dtype, device='cpu').unsqueeze(dim=0)
     rot_mat = ident + sin * K + (1 - cos) * torch.bmm(K, K)
     return rot_mat
 
@@ -759,11 +759,11 @@ def batch_inverse_kinematics_transform(
             # Convert location revolve to rot_mat by rodrigues
             # (B, 1, 1)
             rx, ry, rz = torch.split(axis, 1, dim=1)
-            zeros = torch.zeros((batch_size, 1, 1), dtype=dtype, device=device)
+            zeros = torch.zeros((batch_size, 1, 1), dtype=dtype, device='cpu')
 
             K = torch.cat([zeros, -rz, ry, rz, zeros, -rx, -ry, rx, zeros], dim=1) \
                 .view((batch_size, 3, 3))
-            ident = torch.eye(3, dtype=dtype, device=device).unsqueeze(dim=0)
+            ident = torch.eye(3, dtype=dtype, device='cpu').unsqueeze(dim=0)
             rot_mat_loc = ident + sin * K + (1 - cos) * torch.bmm(K, K)
 
             # Convert spin to rot_mat
@@ -771,10 +771,10 @@ def batch_inverse_kinematics_transform(
             spin_axis = child_rest_loc / child_rest_norm
             # (B, 1, 1)
             rx, ry, rz = torch.split(spin_axis, 1, dim=1)
-            zeros = torch.zeros((batch_size, 1, 1), dtype=dtype, device=device)
+            zeros = torch.zeros((batch_size, 1, 1), dtype=dtype, device='cpu')
             K = torch.cat([zeros, -rz, ry, rz, zeros, -rx, -ry, rx, zeros], dim=1) \
                 .view((batch_size, 3, 3))
-            ident = torch.eye(3, dtype=dtype, device=device).unsqueeze(dim=0)
+            ident = torch.eye(3, dtype=dtype, device='cpu').unsqueeze(dim=0)
             # (B, 1, 1)
             cos, sin = torch.split(phis[:, i - 1], 1, dim=1)
             cos = torch.unsqueeze(cos, dim=2)
@@ -1005,11 +1005,11 @@ def batch_inverse_kinematics_transform_optimized(
             # Convert location revolve to rot_mat by rodrigues
             # (B, K, 1, 1)
             rx, ry, rz = torch.split(axis, 1, dim=2)
-            zeros = torch.zeros((batch_size, len_indices, 1, 1), dtype=dtype, device=device)
+            zeros = torch.zeros((batch_size, len_indices, 1, 1), dtype=dtype, device='cpu')
 
             K = torch.cat([zeros, -rz, ry, rz, zeros, -rx, -ry, rx, zeros], dim=2) \
                 .view((batch_size, len_indices, 3, 3))
-            ident = torch.eye(3, dtype=dtype, device=device).reshape(1, 1, 3, 3)
+            ident = torch.eye(3, dtype=dtype, device='cpu').reshape(1, 1, 3, 3)
             rot_mat_loc = ident + sin * K + (1 - cos) * torch.matmul(K, K)
 
             # Convert spin to rot_mat
@@ -1017,10 +1017,10 @@ def batch_inverse_kinematics_transform_optimized(
             spin_axis = child_rest_loc / child_rest_norm
             # (B, K, 1, 1)
             rx, ry, rz = torch.split(spin_axis, 1, dim=2)
-            zeros = torch.zeros((batch_size, len_indices, 1, 1), dtype=dtype, device=device)
+            zeros = torch.zeros((batch_size, len_indices, 1, 1), dtype=dtype, device='cpu')
             K = torch.cat([zeros, -rz, ry, rz, zeros, -rx, -ry, rx, zeros], dim=2) \
                 .view((batch_size, len_indices, 3, 3))
-            ident = torch.eye(3, dtype=dtype, device=device).reshape(1, 1, 3, 3)
+            ident = torch.eye(3, dtype=dtype, device='cpu').reshape(1, 1, 3, 3)
             # (B, K, 1, 1)
             phi_indices = [item - 1 for item in indices]
             cos, sin = torch.split(phis[:, phi_indices], 1, dim=2)
@@ -1138,11 +1138,11 @@ def batch_get_pelvis_orient(rel_pose_skeleton, rel_rest_pose, parents, children,
     # Convert location revolve to rot_mat by rodrigues
     # (B, 1, 1)
     rx, ry, rz = torch.split(axis, 1, dim=1)
-    zeros = torch.zeros((batch_size, 1, 1), dtype=dtype, device=device)
+    zeros = torch.zeros((batch_size, 1, 1), dtype=dtype, device='cpu')
 
     K = torch.cat([zeros, -rz, ry, rz, zeros, -rx, -ry, rx, zeros], dim=1) \
         .view((batch_size, 3, 3))
-    ident = torch.eye(3, dtype=dtype, device=device).unsqueeze(dim=0)
+    ident = torch.eye(3, dtype=dtype, device='cpu').unsqueeze(dim=0)
     rot_mat_center = ident + sin * K + (1 - cos) * torch.bmm(K, K)
 
     rot_mat = torch.matmul(rot_mat_center, rot_mat_spine)
@@ -1207,11 +1207,11 @@ def vectors2rotmat(vec_rest, vec_final, dtype):
     # Convert location revolve to rot_mat by rodrigues
     # (B, 1, 1)
     rx, ry, rz = torch.split(axis, 1, dim=1)
-    zeros = torch.zeros((batch_size, 1, 1), dtype=dtype, device=device)
+    zeros = torch.zeros((batch_size, 1, 1), dtype=dtype, device='cpu')
 
     K = torch.cat([zeros, -rz, ry, rz, zeros, -rx, -ry, rx, zeros], dim=1) \
         .view((batch_size, 3, 3))
-    ident = torch.eye(3, dtype=dtype, device=device).unsqueeze(dim=0)
+    ident = torch.eye(3, dtype=dtype, device='cpu').unsqueeze(dim=0)
     rot_mat_loc = ident + sin * K + (1 - cos) * torch.bmm(K, K)
 
     return rot_mat_loc

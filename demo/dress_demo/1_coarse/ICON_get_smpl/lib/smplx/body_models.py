@@ -446,17 +446,17 @@ class SMPLLayer(SMPL):
             batch_size = max(batch_size, len(var))
         device, dtype = self.shapedirs.device, self.shapedirs.dtype
         if global_orient is None:
-            global_orient = torch.eye(3, device=device,
+            global_orient = torch.eye(3, device='cpu',
                                       dtype=dtype).view(1, 1, 3, 3).expand(batch_size, -1, -1,
                                                                            -1).contiguous()
         if body_pose is None:
-            body_pose = torch.eye(3, device=device, dtype=dtype).view(1, 1, 3, 3).expand(
+            body_pose = torch.eye(3, device='cpu', dtype=dtype).view(1, 1, 3, 3).expand(
                 batch_size, self.NUM_BODY_JOINTS, -1, -1
             ).contiguous()
         if betas is None:
-            betas = torch.zeros([batch_size, self.num_betas], dtype=dtype, device=device)
+            betas = torch.zeros([batch_size, self.num_betas], dtype=dtype, device='cpu')
         if transl is None:
-            transl = torch.zeros([batch_size, 3], dtype=dtype, device=device)
+            transl = torch.zeros([batch_size, 3], dtype=dtype, device='cpu')
         full_pose = torch.cat(
             [global_orient.reshape(-1, 1, 3, 3),
              body_pose.reshape(-1, self.NUM_BODY_JOINTS, 3, 3)],
@@ -828,26 +828,26 @@ class SMPLHLayer(SMPLH):
             batch_size = max(batch_size, len(var))
         device, dtype = self.shapedirs.device, self.shapedirs.dtype
         if global_orient is None:
-            global_orient = torch.eye(3, device=device,
+            global_orient = torch.eye(3, device='cpu',
                                       dtype=dtype).view(1, 1, 3, 3).expand(batch_size, -1, -1,
                                                                            -1).contiguous()
         if body_pose is None:
-            body_pose = torch.eye(3, device=device,
+            body_pose = torch.eye(3, device='cpu',
                                   dtype=dtype).view(1, 1, 3, 3).expand(batch_size, 21, -1,
                                                                        -1).contiguous()
         if left_hand_pose is None:
-            left_hand_pose = torch.eye(3, device=device,
+            left_hand_pose = torch.eye(3, device='cpu',
                                        dtype=dtype).view(1, 1, 3, 3).expand(batch_size, 15, -1,
                                                                             -1).contiguous()
         if right_hand_pose is None:
-            right_hand_pose = torch.eye(3, device=device,
+            right_hand_pose = torch.eye(3, device='cpu',
                                         dtype=dtype).view(1, 1, 3,
                                                           3).expand(batch_size, 15, -1,
                                                                     -1).contiguous()
         if betas is None:
-            betas = torch.zeros([batch_size, self.num_betas], dtype=dtype, device=device)
+            betas = torch.zeros([batch_size, self.num_betas], dtype=dtype, device='cpu')
         if transl is None:
-            transl = torch.zeros([batch_size, 3], dtype=dtype, device=device)
+            transl = torch.zeros([batch_size, 3], dtype=dtype, device='cpu')
 
         # Concatenate all pose vectors
         full_pose = torch.cat(
@@ -1398,42 +1398,42 @@ class SMPLXLayer(SMPLX):
             batch_size = max(batch_size, len(var))
 
         if global_orient is None:
-            global_orient = torch.eye(3, device=device,
+            global_orient = torch.eye(3, device='cpu',
                                       dtype=dtype).view(1, 1, 3, 3).expand(batch_size, -1, -1,
                                                                            -1).contiguous()
         if body_pose is None:
-            body_pose = torch.eye(3, device=device, dtype=dtype).view(1, 1, 3, 3).expand(
+            body_pose = torch.eye(3, device='cpu', dtype=dtype).view(1, 1, 3, 3).expand(
                 batch_size, self.NUM_BODY_JOINTS, -1, -1
             ).contiguous()
         if left_hand_pose is None:
-            left_hand_pose = torch.eye(3, device=device,
+            left_hand_pose = torch.eye(3, device='cpu',
                                        dtype=dtype).view(1, 1, 3, 3).expand(batch_size, 15, -1,
                                                                             -1).contiguous()
         if right_hand_pose is None:
-            right_hand_pose = torch.eye(3, device=device,
+            right_hand_pose = torch.eye(3, device='cpu',
                                         dtype=dtype).view(1, 1, 3,
                                                           3).expand(batch_size, 15, -1,
                                                                     -1).contiguous()
         if jaw_pose is None:
-            jaw_pose = torch.eye(3, device=device,
+            jaw_pose = torch.eye(3, device='cpu',
                                  dtype=dtype).view(1, 1, 3, 3).expand(batch_size, -1, -1,
                                                                       -1).contiguous()
         if leye_pose is None:
-            leye_pose = torch.eye(3, device=device,
+            leye_pose = torch.eye(3, device='cpu',
                                   dtype=dtype).view(1, 1, 3, 3).expand(batch_size, -1, -1,
                                                                        -1).contiguous()
         if reye_pose is None:
-            reye_pose = torch.eye(3, device=device,
+            reye_pose = torch.eye(3, device='cpu',
                                   dtype=dtype).view(1, 1, 3, 3).expand(batch_size, -1, -1,
                                                                        -1).contiguous()
         if expression is None:
             expression = torch.zeros(
-                [batch_size, self.num_expression_coeffs], dtype=dtype, device=device
+                [batch_size, self.num_expression_coeffs], dtype=dtype, device='cpu'
             )
         if betas is None:
-            betas = torch.zeros([batch_size, self.num_betas], dtype=dtype, device=device)
+            betas = torch.zeros([batch_size, self.num_betas], dtype=dtype, device='cpu')
         if transl is None:
-            transl = torch.zeros([batch_size, 3], dtype=dtype, device=device)
+            transl = torch.zeros([batch_size, 3], dtype=dtype, device='cpu')
 
         # Concatenate all pose vectors
         full_pose = torch.cat(
@@ -1757,19 +1757,19 @@ class MANOLayer(MANO):
         device, dtype = self.shapedirs.device, self.shapedirs.dtype
         if global_orient is None:
             batch_size = 1
-            global_orient = torch.eye(3, device=device,
+            global_orient = torch.eye(3, device='cpu',
                                       dtype=dtype).view(1, 1, 3, 3).expand(batch_size, -1, -1,
                                                                            -1).contiguous()
         else:
             batch_size = global_orient.shape[0]
         if hand_pose is None:
-            hand_pose = torch.eye(3, device=device,
+            hand_pose = torch.eye(3, device='cpu',
                                   dtype=dtype).view(1, 1, 3, 3).expand(batch_size, 15, -1,
                                                                        -1).contiguous()
         if betas is None:
-            betas = torch.zeros([batch_size, self.num_betas], dtype=dtype, device=device)
+            betas = torch.zeros([batch_size, self.num_betas], dtype=dtype, device='cpu')
         if transl is None:
-            transl = torch.zeros([batch_size, 3], dtype=dtype, device=device)
+            transl = torch.zeros([batch_size, 3], dtype=dtype, device='cpu')
 
         full_pose = torch.cat([global_orient, hand_pose], dim=1)
         vertices, joints = lbs(
@@ -2217,35 +2217,35 @@ class FLAMELayer(FLAME):
         device, dtype = self.shapedirs.device, self.shapedirs.dtype
         if global_orient is None:
             batch_size = 1
-            global_orient = torch.eye(3, device=device,
+            global_orient = torch.eye(3, device='cpu',
                                       dtype=dtype).view(1, 1, 3, 3).expand(batch_size, -1, -1,
                                                                            -1).contiguous()
         else:
             batch_size = global_orient.shape[0]
         if neck_pose is None:
-            neck_pose = torch.eye(3, device=device,
+            neck_pose = torch.eye(3, device='cpu',
                                   dtype=dtype).view(1, 1, 3, 3).expand(batch_size, 1, -1,
                                                                        -1).contiguous()
         if jaw_pose is None:
-            jaw_pose = torch.eye(3, device=device,
+            jaw_pose = torch.eye(3, device='cpu',
                                  dtype=dtype).view(1, 1, 3, 3).expand(batch_size, -1, -1,
                                                                       -1).contiguous()
         if leye_pose is None:
-            leye_pose = torch.eye(3, device=device,
+            leye_pose = torch.eye(3, device='cpu',
                                   dtype=dtype).view(1, 1, 3, 3).expand(batch_size, -1, -1,
                                                                        -1).contiguous()
         if reye_pose is None:
-            reye_pose = torch.eye(3, device=device,
+            reye_pose = torch.eye(3, device='cpu',
                                   dtype=dtype).view(1, 1, 3, 3).expand(batch_size, -1, -1,
                                                                        -1).contiguous()
         if betas is None:
-            betas = torch.zeros([batch_size, self.num_betas], dtype=dtype, device=device)
+            betas = torch.zeros([batch_size, self.num_betas], dtype=dtype, device='cpu')
         if expression is None:
             expression = torch.zeros(
-                [batch_size, self.num_expression_coeffs], dtype=dtype, device=device
+                [batch_size, self.num_expression_coeffs], dtype=dtype, device='cpu'
             )
         if transl is None:
-            transl = torch.zeros([batch_size, 3], dtype=dtype, device=device)
+            transl = torch.zeros([batch_size, 3], dtype=dtype, device='cpu')
 
         full_pose = torch.cat([global_orient, neck_pose, jaw_pose, leye_pose, reye_pose], dim=1)
 

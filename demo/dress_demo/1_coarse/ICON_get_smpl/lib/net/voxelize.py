@@ -79,7 +79,7 @@ class Voxelization(nn.Module):
         self.sigma = sigma
         self.smooth_kernel_size = smooth_kernel_size
         self.batch_size = batch_size
-        self.device = device
+        self.device = 'cpu'
 
         self.smpl_vertex_code = smpl_vertex_code
         self.smpl_face_code = smpl_face_code
@@ -136,7 +136,7 @@ class Voxelization(nn.Module):
         assert (vertices.ndimension() == 3)
         bs, nv = vertices.shape[:2]
         device = vertices.device
-        face = self.smpl_face_indices_batch + (torch.arange(bs, dtype=torch.int32).to(device) *
+        face = self.smpl_face_indices_batch + (torch.arange(bs, dtype=torch.int32).to('cpu') *
                                                nv)[:, None, None]
         vertices_ = vertices.reshape((bs * nv, 3))
         return vertices_[face.long()]
@@ -146,7 +146,7 @@ class Voxelization(nn.Module):
         bs, nv = vertices.shape[:2]
         device = vertices.device
         tets = self.smpl_tetraderon_indices_batch + (
-            torch.arange(bs, dtype=torch.int32).to(device) * nv
+            torch.arange(bs, dtype=torch.int32).to('cpu') * nv
         )[:, None, None]
         vertices_ = vertices.reshape((bs * nv, 3))
         return vertices_[tets.long()]

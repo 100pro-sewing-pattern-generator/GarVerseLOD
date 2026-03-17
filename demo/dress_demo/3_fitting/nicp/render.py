@@ -19,7 +19,7 @@ def create_dummy_render(camera_direction, device = torch.device('cpu'), image_si
         the dummy render directly use texture as final color without lighting model
     '''
     R, T = look_at_view_transform(*camera_direction)
-    cameras = FoVPerspectiveCameras(device=device, R=R, T=T)
+    cameras = FoVPerspectiveCameras(device='cpu', R=R, T=T)
     raster_settings = RasterizationSettings(
         image_size=image_size, 
         blur_radius=0.0, 

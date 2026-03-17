@@ -51,7 +51,7 @@ class TestDataset():
         self.smpl_gender = 'neutral'
         self.colab = cfg['colab']
 
-        self.device = device
+        self.device = 'cpu'
 
         keep_lst = sorted(glob.glob(f"{self.image_dir}/*"))
         img_fmts = ['jpg', 'png', 'jpeg', "JPG", 'bmp', 'exr']
@@ -76,11 +76,11 @@ class TestDataset():
         )
 
         # Load SMPL model
-        self.smpl_model = self.get_smpl_model(self.smpl_type, self.smpl_gender).to(self.device)
+        self.smpl_model = self.get_smpl_model(self.smpl_type, self.smpl_gender).to('cpu')
         self.faces = self.smpl_model.faces
 
         if self.hps_type == 'pymaf':
-            self.hps = pymaf_net(path_config.SMPL_MEAN_PARAMS, pretrained=True).to(self.device)
+            self.hps = pymaf_net(path_config.SMPL_MEAN_PARAMS, pretrained=True).to('cpu')
             self.hps.load_state_dict(torch.load(path_config.CHECKPOINT_FILE)['model'], strict=True)
             self.hps.eval()
 
@@ -117,7 +117,7 @@ class TestDataset():
 
         print(colored(f"Using {self.hps_type} as HPS Estimator\n", "green"))
 
-        self.render = Render(size=512, device=device)
+        self.render = Render(size=512, device='cpu')
 
     def __len__(self):
         return len(self.subject_list)

@@ -47,8 +47,8 @@ def reshape_sample_tensor(sample_tensor, num_views):
     return sample_tensor
 
 def gen_landmark(opt, net, cuda, data, save_path, use_octree=True):
-    image_tensor = data['img'].to(device=cuda)
-    calib_tensor = data['calib'].to(device=cuda)
+    image_tensor = data['img'].to('cpu')
+    calib_tensor = data['calib'].to('cpu')
     target = data['lm'][0]
     net.filter(image_tensor)
 
@@ -72,8 +72,8 @@ def gen_landmark(opt, net, cuda, data, save_path, use_octree=True):
 
 
 def gen_mesh(opt, net, cuda, data, save_path, use_octree=True):
-    image_tensor = data['img'].to(device=cuda)
-    calib_tensor = data['calib'].to(device=cuda)
+    image_tensor = data['img'].to('cpu')
+    calib_tensor = data['calib'].to('cpu')
 
     net.filter(image_tensor)
 
@@ -90,7 +90,7 @@ def gen_mesh(opt, net, cuda, data, save_path, use_octree=True):
 
         verts, faces, _, _ = reconstruction(
             net, cuda, calib_tensor, opt.resolution, b_min, b_max, use_octree=use_octree)
-        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device=cuda).float()
+        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to('cpu').float()
         xyz_tensor = net.projection(verts_tensor, calib_tensor[:1])
         uv = xyz_tensor[:, :2, :]
         color = index(image_tensor[:1], uv).detach().cpu().numpy()[0].T
@@ -101,8 +101,8 @@ def gen_mesh(opt, net, cuda, data, save_path, use_octree=True):
         print('Can not create marching cubes at this time.')
 
 def gen_mesh_color(opt, netG, netC, cuda, data, save_path, use_octree=True):
-    image_tensor = data['img'].to(device=cuda)
-    calib_tensor = data['calib'].to(device=cuda)
+    image_tensor = data['img'].to('cpu')
+    calib_tensor = data['calib'].to('cpu')
 
     netG.filter(image_tensor)
     netC.filter(image_tensor)
@@ -123,7 +123,7 @@ def gen_mesh_color(opt, netG, netC, cuda, data, save_path, use_octree=True):
             netG, cuda, calib_tensor, opt.resolution, b_min, b_max, use_octree=use_octree)
 
         # Now Getting colors
-        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device=cuda).float()
+        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to('cpu').float()
         verts_tensor = reshape_sample_tensor(verts_tensor, opt.num_views)
 
         color = np.zeros(verts.shape)
@@ -185,12 +185,12 @@ def calc_error(opt, net, cuda, dataset, num_tests):
         for idx in tqdm(range(num_tests)):
             data = dataset[idx * len(dataset) // num_tests]
             # retrieve the data
-            image_tensor = data['img'].to(device=cuda)
-            calib_tensor = data['calib'].to(device=cuda)
-            sample_tensor = data['samples'].to(device=cuda).unsqueeze(0)
+            image_tensor = data['img'].to('cpu')
+            calib_tensor = data['calib'].to('cpu')
+            sample_tensor = data['samples'].to('cpu').unsqueeze(0)
             if opt.num_views > 1:
                 sample_tensor = reshape_sample_tensor(sample_tensor, opt.num_views)
-            label_tensor = data['labels'].to(device=cuda).unsqueeze(0)
+            label_tensor = data['labels'].to('cpu').unsqueeze(0)
 
             res, error = net.forward(image_tensor, sample_tensor, calib_tensor, labels=label_tensor)
 
@@ -215,14 +215,14 @@ def calc_error_color(opt, netG, netC, cuda, dataset, num_tests):
         for idx in tqdm(range(num_tests)):
             data = dataset[idx * len(dataset) // num_tests]
             # retrieve the data
-            image_tensor = data['img'].to(device=cuda)
-            calib_tensor = data['calib'].to(device=cuda)
-            color_sample_tensor = data['color_samples'].to(device=cuda).unsqueeze(0)
+            image_tensor = data['img'].to('cpu')
+            calib_tensor = data['calib'].to('cpu')
+            color_sample_tensor = data['color_samples'].to('cpu').unsqueeze(0)
 
             if opt.num_views > 1:
                 color_sample_tensor = reshape_sample_tensor(color_sample_tensor, opt.num_views)
 
-            rgb_tensor = data['rgbs'].to(device=cuda).unsqueeze(0)
+            rgb_tensor = data['rgbs'].to('cpu').unsqueeze(0)
 
             netG.filter(image_tensor)
             _, errorC = netC.forward(image_tensor, netG.get_im_feat(), color_sample_tensor, calib_tensor, labels=rgb_tensor)
@@ -328,14 +328,14 @@ def cal_gradient_penalty(netD, real_data, fake_data, device, type='mixed', const
             alpha = torch.rand(real_data.shape[0], 1)
             alpha = alpha.expand(real_data.shape[0], real_data.nelement() // real_data.shape[0]).contiguous().view(
                 *real_data.shape)
-            alpha = alpha.to(device)
+            alpha = alpha.to('cpu')
             interpolatesv = alpha * real_data + ((1 - alpha) * fake_data)
         else:
             raise NotImplementedError('{} not implemented'.format(type))
         interpolatesv.requires_grad_(True)
         disc_interpolates = netD(interpolatesv)
         gradients = torch.autograd.grad(outputs=disc_interpolates, inputs=interpolatesv,
-                                        grad_outputs=torch.ones(disc_interpolates.size()).to(device),
+                                        grad_outputs=torch.ones(disc_interpolates.size()).to('cpu'),
                                         create_graph=True, retain_graph=True, only_inputs=True)
         gradients = gradients[0].view(real_data.size(0), -1)  # flat the data
         gradient_penalty = (((gradients + 1e-16).norm(2, dim=1) - constant) ** 2).mean() * lambda_gp  # added eps

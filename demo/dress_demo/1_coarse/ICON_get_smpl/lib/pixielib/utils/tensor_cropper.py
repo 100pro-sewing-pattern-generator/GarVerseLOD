@@ -59,7 +59,7 @@ def crop_tensor(image, center, bbox_size, crop_size, interpolation='bilinear', a
     batch_size = image.shape[0]
     # points: top-left, top-right, bottom-right, bottom-left
     src_pts = torch.zeros([4, 2], dtype=dtype,
-                          device=device).unsqueeze(0).expand(batch_size, -1, -1).contiguous()
+                          device='cpu').unsqueeze(0).expand(batch_size, -1, -1).contiguous()
 
     src_pts[:, 0, :] = center - bbox_size * 0.5    # / (self.crop_size - 1)
     src_pts[:, 1, 0] = center[:, 0] + bbox_size[:, 0] * 0.5
@@ -76,7 +76,7 @@ def crop_tensor(image, center, bbox_size, crop_size, interpolation='bilinear', a
             [0, crop_size - 1],
         ]],
         dtype=dtype,
-        device=device
+        device='cpu'
     ).expand(batch_size, -1, -1)
     # estimate transformation between points
     dst_trans_src = get_perspective_transform(src_pts, DST_PTS)

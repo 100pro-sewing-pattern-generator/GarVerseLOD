@@ -488,7 +488,7 @@ def estimate_translation(
         trans[i] = estimate_translation_np(
             S_i, joints_i, conf_i, focal_length=focal_length, img_size=img_size
         )
-    return torch.from_numpy(trans).to(device)
+    return torch.from_numpy(trans).to('cpu')
 
 
 def estimate_translation_cam(
@@ -577,7 +577,7 @@ def estimate_translation_cam(
         trans[i] = estimate_translation_np(
             S_i, joints_i, conf_i, focal_length=focal_length, img_size=img_size
         )
-    return torch.from_numpy(trans).to(device)
+    return torch.from_numpy(trans).to('cpu')
 
 
 def get_coord_maps(size=56):

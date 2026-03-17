@@ -135,8 +135,8 @@ def reshape_sample_tensor(sample_tensor, num_views):
 
 def gen_mesh_eval(opt, net, cuda, data, resolution=None):
     resolution = opt.resolution if resolution is None else resolution
-    image_tensor = data['img'].to(device=cuda)
-    calib_tensor = data['calib'].to(device=cuda)
+    image_tensor = data['img'].to('cpu')
+    calib_tensor = data['calib'].to('cpu')
 
     net.filter(image_tensor)
 
@@ -156,8 +156,8 @@ def gen_mesh_eval(opt, net, cuda, data, resolution=None):
 
 def gen_mesh(opt, net, cuda, data, save_path, resolution=None):
     resolution = opt.resolution if resolution is None else resolution
-    image_tensor = data['img'].to(device=cuda)
-    calib_tensor = data['calib'].to(device=cuda)
+    image_tensor = data['img'].to('cpu')
+    calib_tensor = data['calib'].to('cpu')
 
     net.filter(image_tensor)
 
@@ -177,7 +177,7 @@ def gen_mesh(opt, net, cuda, data, save_path, resolution=None):
         verts, faces, _, _ = reconstruction_faster(
             net, cuda, calib_tensor, resolution, b_min, b_max
         )
-        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device=cuda).float()
+        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to('cpu').float()
         xyz_tensor = net.projection(verts_tensor, calib_tensor[:1])
         uv = xyz_tensor[:, :2, :]
         color = netG.index(image_tensor[:1], uv).detach().cpu().numpy()[0].T
@@ -191,8 +191,8 @@ def gen_mesh(opt, net, cuda, data, save_path, resolution=None):
 
 
 def gen_mesh_color(opt, netG, netC, cuda, data, save_path, use_octree=True):
-    image_tensor = data['img'].to(device=cuda)
-    calib_tensor = data['calib'].to(device=cuda)
+    image_tensor = data['img'].to('cpu')
+    calib_tensor = data['calib'].to('cpu')
 
     netG.filter(image_tensor)
     netC.filter(image_tensor)
@@ -216,7 +216,7 @@ def gen_mesh_color(opt, netG, netC, cuda, data, save_path, use_octree=True):
         )
 
         # Now Getting colors
-        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device=cuda).float()
+        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to('cpu').float()
         verts_tensor = reshape_sample_tensor(verts_tensor, opt.num_views)
         color = np.zeros(verts.shape)
         interval = 10000
@@ -299,16 +299,16 @@ def compute_acc(pred, gt, thresh=0.5):
 
 #             if use_kaolin and has_kaolin:
 #                 kal_mesh_gt = kal.rep.TriangleMesh.from_tensors(
-#                         torch.tensor(mesh_gt.vertices).float().to(device=cuda),
-#                         torch.tensor(mesh_gt.faces).long().to(device=cuda))
+#                         torch.tensor(mesh_gt.vertices).float().to('cpu'),
+#                         torch.tensor(mesh_gt.faces).long().to('cpu'))
 #                 kal_mesh_pred = kal.rep.TriangleMesh.from_tensors(
-#                     torch.tensor(mesh_pred.vertices).float().to(device=cuda),
-#                     torch.tensor(mesh_pred.faces).long().to(device=cuda))
+#                     torch.tensor(mesh_pred.vertices).float().to('cpu'),
+#                     torch.tensor(mesh_pred.faces).long().to('cpu'))
 
 #                 kal_distance_0 = kal.metrics.mesh.point_to_surface(
-#                     torch.tensor(pred_surface_pts).float().to(device=cuda), kal_mesh_gt)
+#                     torch.tensor(pred_surface_pts).float().to('cpu'), kal_mesh_gt)
 #                 kal_distance_1 = kal.metrics.mesh.point_to_surface(
-#                     torch.tensor(gt_surface_pts).float().to(device=cuda), kal_mesh_pred)
+#                     torch.tensor(gt_surface_pts).float().to('cpu'), kal_mesh_pred)
 
 #                 dist_gt_pred = torch.sqrt(kal_distance_0).cpu().numpy()
 #                 dist_pred_gt = torch.sqrt(kal_distance_1).cpu().numpy()
@@ -337,12 +337,12 @@ def calc_error(opt, net, cuda, dataset, num_tests):
         for idx in tqdm(range(num_tests)):
             data = dataset[idx * len(dataset) // num_tests]
             # retrieve the data
-            image_tensor = data['img'].to(device=cuda)
-            calib_tensor = data['calib'].to(device=cuda)
-            sample_tensor = data['samples'].to(device=cuda).unsqueeze(0)
+            image_tensor = data['img'].to('cpu')
+            calib_tensor = data['calib'].to('cpu')
+            sample_tensor = data['samples'].to('cpu').unsqueeze(0)
             if opt.num_views > 1:
                 sample_tensor = reshape_sample_tensor(sample_tensor, opt.num_views)
-            label_tensor = data['labels'].to(device=cuda).unsqueeze(0)
+            label_tensor = data['labels'].to('cpu').unsqueeze(0)
 
             res, error = net.forward(image_tensor, sample_tensor, calib_tensor, labels=label_tensor)
 
@@ -368,14 +368,14 @@ def calc_error_color(opt, netG, netC, cuda, dataset, num_tests):
         for idx in tqdm(range(num_tests)):
             data = dataset[idx * len(dataset) // num_tests]
             # retrieve the data
-            image_tensor = data['img'].to(device=cuda)
-            calib_tensor = data['calib'].to(device=cuda)
-            color_sample_tensor = data['color_samples'].to(device=cuda).unsqueeze(0)
+            image_tensor = data['img'].to('cpu')
+            calib_tensor = data['calib'].to('cpu')
+            color_sample_tensor = data['color_samples'].to('cpu').unsqueeze(0)
 
             if opt.num_views > 1:
                 color_sample_tensor = reshape_sample_tensor(color_sample_tensor, opt.num_views)
 
-            rgb_tensor = data['rgbs'].to(device=cuda).unsqueeze(0)
+            rgb_tensor = data['rgbs'].to('cpu').unsqueeze(0)
 
             netG.filter(image_tensor)
             _, errorC = netC.forward(

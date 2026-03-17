@@ -156,7 +156,7 @@ def cal_gradient_penalty(
             alpha = alpha.expand(real_data.shape[0],
                                  real_data.nelement() //
                                  real_data.shape[0]).contiguous().view(*real_data.shape)
-            alpha = alpha.to(device)
+            alpha = alpha.to('cpu')
             interpolatesv = alpha * real_data + ((1 - alpha) * fake_data)
         else:
             raise NotImplementedError('{} not implemented'.format(type))
@@ -165,7 +165,7 @@ def cal_gradient_penalty(
         gradients = torch.autograd.grad(
             outputs=disc_interpolates,
             inputs=interpolatesv,
-            grad_outputs=torch.ones(disc_interpolates.size()).to(device),
+            grad_outputs=torch.ones(disc_interpolates.size()).to('cpu'),
             create_graph=True,
             retain_graph=True,
             only_inputs=True
@@ -292,7 +292,7 @@ class Vgg19(torch.nn.Module):
 class VGGLoss(nn.Module):
     def __init__(self):
         super(VGGLoss, self).__init__()
-        self.vgg = Vgg19().cuda()
+        self.vgg = Vgg19().cpu()
         self.criterion = nn.L1Loss()
         self.weights = [1.0 / 32, 1.0 / 16, 1.0 / 8, 1.0 / 4, 1.0]
 

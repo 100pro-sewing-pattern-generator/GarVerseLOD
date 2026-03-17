@@ -374,7 +374,7 @@ def estimate_translation(S, joints_2d, focal_length=5000., img_size=224.):
         trans[i] = estimate_translation_np(
             S_i, joints_i, conf_i, focal_length=focal_length, img_size=img_size
         )
-    return torch.from_numpy(trans).to(device)
+    return torch.from_numpy(trans).to('cpu')
 
 
 def Rot_y(angle, category='torch', prepend_dim=True, device=None):
@@ -390,9 +390,9 @@ def Rot_y(angle, category='torch', prepend_dim=True, device=None):
     )
     if category == 'torch':
         if prepend_dim:
-            return torch.tensor(m, dtype=torch.float, device=device).unsqueeze(0)
+            return torch.tensor(m, dtype=torch.float, device='cpu').unsqueeze(0)
         else:
-            return torch.tensor(m, dtype=torch.float, device=device)
+            return torch.tensor(m, dtype=torch.float, device='cpu')
     elif category == 'numpy':
         if prepend_dim:
             return np.expand_dims(m, 0)
@@ -415,9 +415,9 @@ def Rot_x(angle, category='torch', prepend_dim=True, device=None):
     )
     if category == 'torch':
         if prepend_dim:
-            return torch.tensor(m, dtype=torch.float, device=device).unsqueeze(0)
+            return torch.tensor(m, dtype=torch.float, device='cpu').unsqueeze(0)
         else:
-            return torch.tensor(m, dtype=torch.float, device=device)
+            return torch.tensor(m, dtype=torch.float, device='cpu')
     elif category == 'numpy':
         if prepend_dim:
             return np.expand_dims(m, 0)
@@ -439,9 +439,9 @@ def Rot_z(angle, category='torch', prepend_dim=True, device=None):
     )
     if category == 'torch':
         if prepend_dim:
-            return torch.tensor(m, dtype=torch.float, device=device).unsqueeze(0)
+            return torch.tensor(m, dtype=torch.float, device='cpu').unsqueeze(0)
         else:
-            return torch.tensor(m, dtype=torch.float, device=device)
+            return torch.tensor(m, dtype=torch.float, device='cpu')
     elif category == 'numpy':
         if prepend_dim:
             return np.expand_dims(m, 0)

@@ -43,7 +43,7 @@ class SpatialEncoder(pl.LightningModule):
         for _ in range(nlevels):
             v.append(scale * np.pi * val)
             val *= 2
-        return torch.from_numpy(np.asarray(v, dtype=np.float32)).to(device)
+        return torch.from_numpy(np.asarray(v, dtype=np.float32)).to('cpu')
 
     def get_dim(self):
         if self.sp_type in ["z", "rel_z", "rel_z_decay"]:

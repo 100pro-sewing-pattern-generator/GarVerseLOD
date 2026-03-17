@@ -62,10 +62,10 @@ class StandardRasterizer(nn.Module):
         if w is None:
             w = self.h
         bz = vertices.shape[0]
-        depth_buffer = torch.zeros([bz, h, w]).float().to(device) + 1e6
-        triangle_buffer = torch.zeros([bz, h, w]).int().to(device) - 1
-        baryw_buffer = torch.zeros([bz, h, w, 3]).float().to(device)
-        vert_vis = torch.zeros([bz, vertices.shape[1]]).float().to(device)
+        depth_buffer = torch.zeros([bz, h, w]).float().to('cpu') + 1e6
+        triangle_buffer = torch.zeros([bz, h, w]).int().to('cpu') - 1
+        baryw_buffer = torch.zeros([bz, h, w, 3]).float().to('cpu')
+        vert_vis = torch.zeros([bz, vertices.shape[1]]).float().to('cpu')
 
         vertices = vertices.clone().float()
         vertices[..., 0] = vertices[..., 0] * w / 2 + w / 2

@@ -63,8 +63,8 @@ def point_mesh_distance(meshes, pcls):
 class Evaluator:
     def __init__(self, device):
 
-        self.render = Render(size=512, device=device)
-        self.device = device
+        self.render = Render(size=512, device='cpu')
+        self.device = 'cpu'
 
     def set_mesh(self, result_dict):
 

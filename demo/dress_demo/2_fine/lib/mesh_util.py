@@ -29,7 +29,7 @@ def reconstructionLM(net, cuda, calib_tensor, target,
     def eval_func(points):
         points = np.expand_dims(points, axis=0)
         points = np.repeat(points, net.num_views, axis=0)
-        samples = torch.from_numpy(points).to(device=cuda).float()
+        samples = torch.from_numpy(points).to('cpu').float()
         net.query(samples, calib_tensor)
         pred = net.get_preds()[0][0]
 
@@ -73,7 +73,7 @@ def reconstruction(net, cuda, calib_tensor,
     def eval_func(points):
         points = np.expand_dims(points, axis=0)
         points = np.repeat(points, net.num_views, axis=0)
-        samples = torch.from_numpy(points).to(device=cuda).float()
+        samples = torch.from_numpy(points).to('cpu').float()
         net.query(samples, calib_tensor)
         pred = net.get_preds()[0][0]
 
@@ -90,7 +90,7 @@ def reconstruction(net, cuda, calib_tensor,
     # Finally we do marching cubes
     # try:
         # print(sdf)
-    verts, faces, normals, values = measure.marching_cubes_lewiner(sdf, 0.5)
+    verts, faces, normals, values = measure.marching_cubes(sdf, 0.5)
     # transform verts into world coordinate system
     verts = np.matmul(mat[:3, :3], verts.T) + mat[:3, 3:4]
     verts = verts.T
@@ -125,7 +125,7 @@ def reconstruction_boundary(net, cuda, calib_tensor,
     def eval_func(points):
         points = np.expand_dims(points, axis=0)
         points = np.repeat(points, net.num_views, axis=0)
-        samples = torch.from_numpy(points).to(device=cuda).float()
+        samples = torch.from_numpy(points).to('cpu').float()
         net.query(samples, calib_tensor)
         pred = net.get_preds()[0][key_index[1]]
 
@@ -142,7 +142,7 @@ def reconstruction_boundary(net, cuda, calib_tensor,
     # Finally we do marching cubes
     try:
         # print(sdf)
-        verts, faces, normals, values = measure.marching_cubes_lewiner(sdf, 0.5)
+        verts, faces, normals, values = measure.marching_cubes(sdf, 0.5)
         # transform verts into world coordinate system
         verts = np.matmul(mat[:3, :3], verts.T) + mat[:3, 3:4]
         verts = verts.T

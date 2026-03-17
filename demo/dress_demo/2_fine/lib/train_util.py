@@ -54,8 +54,8 @@ def reshape_sample_tensor(sample_tensor, num_views):
 
 def gen_mesh(opt, net, cuda, data, save_path, use_octree=True):
 
-    image_tensor = data['img'].to(device=cuda)
-    calib_tensor = data['calib'].to(device=cuda)
+    image_tensor = data['img'].to(device='cpu')
+    calib_tensor = data['calib'].to(device='cpu')
 
     net.filter(image_tensor)
 
@@ -78,7 +78,7 @@ def gen_mesh(opt, net, cuda, data, save_path, use_octree=True):
 
         verts, faces, _, _ = reconstruction(
             net, cuda, calib_tensor, opt.resolution, b_min, b_max, use_octree=use_octree)
-        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device=cuda).float()
+        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device='cpu').float()
         xyz_tensor = net.projection(verts_tensor, calib_tensor[:1])
         uv = xyz_tensor[:, :2, :]
         color = index(image_tensor[:1], uv).detach().cpu().numpy()[0].T
@@ -105,7 +105,7 @@ def gen_mesh(opt, net, cuda, data, save_path, use_octree=True):
 
         verts, faces, _, _ = reconstruction(
             net, cuda, calib_tensor, opt.resolution, b_min, b_max, use_octree=use_octree)
-        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device=cuda).float()
+        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to('cpu').float()
         xyz_tensor = net.projection(verts_tensor, calib_tensor[:1])
         uv = xyz_tensor[:, :2, :]
         color = index(image_tensor[:1], uv).detach().cpu().numpy()[0].T
@@ -118,8 +118,8 @@ def gen_mesh(opt, net, cuda, data, save_path, use_octree=True):
     
 def gen_mesh_boundary(opt, net, cuda, data, save_path, key_index, use_octree=True):
 
-    image_tensor = data['img'].to(device=cuda)
-    calib_tensor = data['calib'].to(device=cuda)
+    image_tensor = data['img'].to(device='cpu')
+    calib_tensor = data['calib'].to(device='cpu')
 
     net.filter(image_tensor)
 
@@ -142,7 +142,7 @@ def gen_mesh_boundary(opt, net, cuda, data, save_path, key_index, use_octree=Tru
 
         verts, faces, _, _ = reconstruction_boundary(
             net, cuda, calib_tensor, opt.resolution, b_min, b_max, key_index, use_octree=use_octree)
-        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device=cuda).float()
+        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device='cpu').float()
         xyz_tensor = net.projection(verts_tensor, calib_tensor[:1])
         uv = xyz_tensor[:, :2, :]
         color = index(image_tensor[:1], uv).detach().cpu().numpy()[0].T
@@ -169,7 +169,7 @@ def gen_mesh_boundary(opt, net, cuda, data, save_path, key_index, use_octree=Tru
 
         verts, faces, _, _ = reconstruction(
             net, cuda, calib_tensor, opt.resolution, b_min, b_max, use_octree=use_octree)
-        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device=cuda).float()
+        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to('cpu').float()
         xyz_tensor = net.projection(verts_tensor, calib_tensor[:1])
         uv = xyz_tensor[:, :2, :]
         color = index(image_tensor[:1], uv).detach().cpu().numpy()[0].T
@@ -181,8 +181,8 @@ def gen_mesh_boundary(opt, net, cuda, data, save_path, key_index, use_octree=Tru
     '''
 
 def gen_mesh_color(opt, netG, netC, cuda, data, save_path, use_octree=True):
-    image_tensor = data['img'].to(device=cuda)
-    calib_tensor = data['calib'].to(device=cuda)
+    image_tensor = data['img'].to(device='cpu')
+    calib_tensor = data['calib'].to(device='cpu')
 
     netG.filter(image_tensor)
     netC.filter(image_tensor)
@@ -203,7 +203,7 @@ def gen_mesh_color(opt, netG, netC, cuda, data, save_path, use_octree=True):
             netG, cuda, calib_tensor, opt.resolution, b_min, b_max, use_octree=use_octree)
 
         # Now Getting colors
-        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device=cuda).float()
+        verts_tensor = torch.from_numpy(verts.T).unsqueeze(0).to(device='cpu').float()
         verts_tensor = reshape_sample_tensor(verts_tensor, opt.num_views)
         color = np.zeros(verts.shape)
         interval = 10000
@@ -264,12 +264,12 @@ def calc_error(opt, net, cuda, dataset, num_tests):
         for idx in tqdm(range(num_tests)):
             data = dataset[idx * len(dataset) // num_tests]
             # retrieve the data
-            image_tensor = data['img'].to(device=cuda)
-            calib_tensor = data['calib'].to(device=cuda)
-            sample_tensor = data['samples'].to(device=cuda).unsqueeze(0)
+            image_tensor = data['img'].to(device='cpu')
+            calib_tensor = data['calib'].to(device='cpu')
+            sample_tensor = data['samples'].to(device='cpu').unsqueeze(0)
             if opt.num_views > 1:
                 sample_tensor = reshape_sample_tensor(sample_tensor, opt.num_views)
-            label_tensor = data['labels'].to(device=cuda).unsqueeze(0)
+            label_tensor = data['labels'].to(device='cpu').unsqueeze(0)
 
             res, error = net.forward(image_tensor, sample_tensor, calib_tensor, labels=label_tensor)
 
@@ -294,14 +294,14 @@ def calc_error_color(opt, netG, netC, cuda, dataset, num_tests):
         for idx in tqdm(range(num_tests)):
             data = dataset[idx * len(dataset) // num_tests]
             # retrieve the data
-            image_tensor = data['img'].to(device=cuda)
-            calib_tensor = data['calib'].to(device=cuda)
-            color_sample_tensor = data['color_samples'].to(device=cuda).unsqueeze(0)
+            image_tensor = data['img'].to(device='cpu')
+            calib_tensor = data['calib'].to(device='cpu')
+            color_sample_tensor = data['color_samples'].to(device='cpu').unsqueeze(0)
 
             if opt.num_views > 1:
                 color_sample_tensor = reshape_sample_tensor(color_sample_tensor, opt.num_views)
 
-            rgb_tensor = data['rgbs'].to(device=cuda).unsqueeze(0)
+            rgb_tensor = data['rgbs'].to(device='cpu').unsqueeze(0)
 
             netG.filter(image_tensor)
             _, errorC = netC.forward(image_tensor, netG.get_im_feat(), color_sample_tensor, calib_tensor, labels=rgb_tensor)

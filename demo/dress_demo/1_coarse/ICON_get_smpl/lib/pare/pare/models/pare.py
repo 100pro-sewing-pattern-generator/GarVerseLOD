@@ -250,7 +250,7 @@ def get_pare_model(device):
         use_soft_attention=model_cfg.PARE.USE_SOFT_ATTENTION,
         num_branch_iteration=model_cfg.PARE.NUM_BRANCH_ITERATION,
         branch_deeper=model_cfg.PARE.BRANCH_DEEPER,
-    ).to(device)
+    ).to('cpu')
     model.eval()
 
     logger.info(f'Loading pretrained model from {PARE_CKPT}')

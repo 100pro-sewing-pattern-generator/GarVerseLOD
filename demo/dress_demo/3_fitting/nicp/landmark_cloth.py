@@ -28,7 +28,7 @@ def get_mesh_landmark(meshes: Meshes, dummy_renderer: MeshRenderer):
     shape_img = dummy_renderer(shape_meshes)[:, :, :, 0, :]
     rgb_img_uint8 = (rgb_img * 255).permute(0, 3, 1, 2)
     landmarks = fa.get_landmarks_from_batch(rgb_img_uint8)
-    landmarks = torch.from_numpy(np.array(landmarks)).to(device).long()
+    landmarks = torch.from_numpy(np.array(landmarks)).to('cpu').long()
 
     row_index = landmarks[:, :, 1].view(landmarks.shape[0], -1)
     column_index = landmarks[:, :, 0].view(landmarks.shape[0], -1)

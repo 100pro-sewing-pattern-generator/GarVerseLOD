@@ -29,11 +29,11 @@ def softargmax1d(
 ):
     dtype, device = heatmaps.dtype, heatmaps.device
     if temperature is None:
-        temperature = torch.tensor(1.0, dtype=dtype, device=device)
+        temperature = torch.tensor(1.0, dtype=dtype, device='cpu')
     batch_size, num_channels, dim = heatmaps.shape
-    points = torch.arange(0, dim, device=device,
+    points = torch.arange(0, dim, device='cpu',
                           dtype=dtype).reshape(1, 1, dim).expand(batch_size, -1, -1)
-    # y = torch.arange(0, height, device=device, dtype=dtype).reshape(1, 1, height, 1).expand(batch_size, -1, -1, width)
+    # y = torch.arange(0, height, device='cpu', dtype=dtype).reshape(1, 1, height, 1).expand(batch_size, -1, -1, width)
     # Should be Bx2xHxW
 
     # points = torch.cat([x, y], dim=1)
@@ -60,11 +60,11 @@ def softargmax2d(
 ):
     dtype, device = heatmaps.dtype, heatmaps.device
     if temperature is None:
-        temperature = torch.tensor(1.0, dtype=dtype, device=device)
+        temperature = torch.tensor(1.0, dtype=dtype, device='cpu')
     batch_size, num_channels, height, width = heatmaps.shape
-    x = torch.arange(0, width, device=device,
+    x = torch.arange(0, width, device='cpu',
                      dtype=dtype).reshape(1, 1, 1, width).expand(batch_size, -1, height, -1)
-    y = torch.arange(0, height, device=device,
+    y = torch.arange(0, height, device='cpu',
                      dtype=dtype).reshape(1, 1, height, 1).expand(batch_size, -1, -1, width)
     # Should be Bx2xHxW
     points = torch.cat([x, y], dim=1)
@@ -95,15 +95,15 @@ def softargmax3d(
 ):
     dtype, device = heatmaps.dtype, heatmaps.device
     if temperature is None:
-        temperature = torch.tensor(1.0, dtype=dtype, device=device)
+        temperature = torch.tensor(1.0, dtype=dtype, device='cpu')
     batch_size, num_channels, height, width, depth = heatmaps.shape
-    x = torch.arange(0, width, device=device,
+    x = torch.arange(0, width, device='cpu',
                      dtype=dtype).reshape(1, 1, 1, width,
                                           1).expand(batch_size, -1, height, -1, depth)
-    y = torch.arange(0, height, device=device,
+    y = torch.arange(0, height, device='cpu',
                      dtype=dtype).reshape(1, 1, height, 1,
                                           1).expand(batch_size, -1, -1, width, depth)
-    z = torch.arange(0, depth, device=device,
+    z = torch.arange(0, depth, device='cpu',
                      dtype=dtype).reshape(1, 1, 1, 1,
                                           depth).expand(batch_size, -1, height, width, -1)
     # Should be Bx2xHxW

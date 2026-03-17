@@ -61,9 +61,9 @@ class BaseTrainer(object):
         for k, v in dict.items():
             if isinstance(v, torch.Tensor):
                 if tensor2float:
-                    dict[k] = v.float().to(device)
+                    dict[k] = v.float().to('cpu')
                 else:
-                    dict[k] = v.to(device)
+                    dict[k] = v.to('cpu')
 
     # The following methods (with the possible exception of test) have to be implemented in the derived classes
     def train(self, epoch):

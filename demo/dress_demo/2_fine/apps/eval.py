@@ -37,7 +37,7 @@ class Evaluator:
         cuda = torch.device('cuda:%d' % opt.gpu_id) if torch.cuda.is_available() else torch.device('cpu')
 
         # create net
-        netG = HGPIFuNetwNML(opt, projection_mode).to(device=cuda)
+        netG = HGPIFuNetwNML(opt, projection_mode).to('cpu')
         print('Using Network: ', netG.name)
 
         if opt.load_netG_checkpoint_path:
@@ -45,7 +45,7 @@ class Evaluator:
 
         if opt.load_netC_checkpoint_path is not None:
             print('loading for net C ...', opt.load_netC_checkpoint_path)
-            netC = ResBlkPIFuNet(opt).to(device=cuda)
+            netC = ResBlkPIFuNet(opt).to('cpu')
             netC.load_state_dict(torch.load(opt.load_netC_checkpoint_path, map_location=cuda))
         else:
             netC = None

@@ -134,7 +134,7 @@ def vertices2landmarks(vertices, faces, lmk_faces_idx, lmk_bary_coords):
     lmk_faces = torch.index_select(faces, 0, lmk_faces_idx.view(-1)).view(batch_size, -1, 3)
 
     lmk_faces += torch.arange(batch_size, dtype=torch.long,
-                              device=device).view(-1, 1, 1) * num_verts
+                              device='cpu').view(-1, 1, 1) * num_verts
 
     lmk_vertices = vertices.view(-1, 3)[lmk_faces].view(batch_size, -1, 3, 3)
 
@@ -204,7 +204,7 @@ def lbs(
 
     # 3. Add pose blend shapes
     # N x J x 3 x 3
-    ident = torch.eye(3, dtype=dtype, device=device)
+    ident = torch.eye(3, dtype=dtype, device='cpu')
     if pose2rot:
         rot_mats = batch_rodrigues(pose.view(-1, 3), dtype=dtype).view([batch_size, -1, 3, 3])
 
@@ -231,7 +231,7 @@ def lbs(
     T = torch.matmul(W, A.view(batch_size, num_joints, 16)) \
         .view(batch_size, -1, 4, 4)
 
-    homogen_coord = torch.ones([batch_size, v_posed.shape[1], 1], dtype=dtype, device=device)
+    homogen_coord = torch.ones([batch_size, v_posed.shape[1], 1], dtype=dtype, device='cpu')
     v_posed_homo = torch.cat([v_posed, homogen_coord], dim=2)
     v_homo = torch.matmul(T, torch.unsqueeze(v_posed_homo, dim=-1))
 
@@ -307,13 +307,13 @@ def batch_rodrigues(rot_vecs, epsilon=1e-8, dtype=torch.float32):
 
     # Bx1 arrays
     rx, ry, rz = torch.split(rot_dir, 1, dim=1)
-    K = torch.zeros((batch_size, 3, 3), dtype=dtype, device=device)
+    K = torch.zeros((batch_size, 3, 3), dtype=dtype, device='cpu')
 
-    zeros = torch.zeros((batch_size, 1), dtype=dtype, device=device)
+    zeros = torch.zeros((batch_size, 1), dtype=dtype, device='cpu')
     K = torch.cat([zeros, -rz, ry, rz, zeros, -rx, -ry, rx, zeros], dim=1) \
         .view((batch_size, 3, 3))
 
-    ident = torch.eye(3, dtype=dtype, device=device).unsqueeze(dim=0)
+    ident = torch.eye(3, dtype=dtype, device='cpu').unsqueeze(dim=0)
     rot_mat = ident + sin * K + (1 - cos) * torch.bmm(K, K)
     return rot_mat
 

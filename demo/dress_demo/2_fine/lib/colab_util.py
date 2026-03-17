@@ -36,7 +36,7 @@ def set_renderer():
 
     # Initialize an OpenGL perspective camera.
     R, T = look_at_view_transform(2.0, 0, 180) 
-    cameras = OpenGLOrthographicCameras(device=device, R=R, T=T)
+    cameras = OpenGLOrthographicCameras(device='cpu', R=R, T=T)
 
     raster_settings = RasterizationSettings(
         image_size=512, 
@@ -46,7 +46,7 @@ def set_renderer():
         max_faces_per_bin = None
     )
 
-    lights = PointLights(device=device, location=((2.0, 2.0, 2.0),))
+    lights = PointLights(device='cpu', location=((2.0, 2.0, 2.0),))
 
     renderer = MeshRenderer(
         rasterizer=MeshRasterizer(
@@ -54,7 +54,7 @@ def set_renderer():
             raster_settings=raster_settings
         ),
         shader=HardPhongShader(
-            device=device, 
+            device='cpu', 
             cameras=cameras,
             lights=lights
         )
@@ -80,12 +80,12 @@ def generate_video_from_obj(obj_path, video_path, renderer):
 
     # Load obj file
     verts_rgb_colors = get_verts_rgb_colors(obj_path)
-    verts_rgb_colors = torch.from_numpy(verts_rgb_colors).to(device)
+    verts_rgb_colors = torch.from_numpy(verts_rgb_colors).to('cpu')
     textures = Textures(verts_rgb=verts_rgb_colors)
     wo_textures = Textures(verts_rgb=torch.ones_like(verts_rgb_colors)*0.75)
 
     # Load obj
-    mesh = load_objs_as_meshes([obj_path], device=device)
+    mesh = load_objs_as_meshes([obj_path], device='cpu')
 
     # Set mesh
     vers = mesh._verts_list
@@ -98,7 +98,7 @@ def generate_video_from_obj(obj_path, video_path, renderer):
     out = cv2.VideoWriter(video_path, fourcc, 20.0, (1024,512))
 
     for i in tqdm(range(90)):
-        R, T = look_at_view_transform(1.8, 0, i*4, device=device)
+        R, T = look_at_view_transform(1.8, 0, i*4, device='cpu')
         images_w_tex = renderer(mesh_w_tex, R=R, T=T)
         images_w_tex = np.clip(images_w_tex[0, ..., :3].cpu().numpy(), 0.0, 1.0)[:, :, ::-1] * 255
         images_wo_tex = renderer(mesh_wo_tex, R=R, T=T)

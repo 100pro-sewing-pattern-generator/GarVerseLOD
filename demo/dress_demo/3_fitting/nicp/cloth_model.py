@@ -20,12 +20,12 @@ def load_bfm_model(device = torch.device('cpu'), data_dir=None):
     vertex = np.asarray(src_mesh.vertices)
     faces = np.asarray(src_mesh.faces)
     lm_index = landmarks[None,...]
-    vertex = torch.from_numpy(vertex).float().to(device)
-    faces = torch.from_numpy(faces).long().to(device)# - 1
-    lm_index = torch.from_numpy(lm_index).long().to(device)
+    vertex = torch.from_numpy(vertex).float().to('cpu')
+    faces = torch.from_numpy(faces).long().to('cpu')# - 1
+    lm_index = torch.from_numpy(lm_index).long().to('cpu')
     
     color = np.ones(shape=vertex.shape).reshape(-1, 3)*255
-    color = torch.from_numpy(color).float().to(device).unsqueeze(0)
+    color = torch.from_numpy(color).float().to('cpu').unsqueeze(0)
     textures = TexturesVertex(color)
     
     bfm_mesh = Meshes([vertex], [faces], textures)

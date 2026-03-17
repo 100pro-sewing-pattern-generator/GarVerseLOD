@@ -26,7 +26,7 @@ class MAF_Extractor(nn.Module):
     def __init__(self, device=torch.device('cuda')):
         super().__init__()
 
-        self.device = device
+        self.device = 'cpu'
         self.filters = []
         self.num_views = 1
         filter_channels = cfg.MODEL.PyMAF.MLP_DIM

@@ -51,7 +51,7 @@ def face_vertices(vertices, faces):
     bs, nf = faces.shape[:2]
     device = vertices.device
     faces = faces + \
-        (torch.arange(bs, dtype=torch.int32).to(device) * nv)[:, None, None]
+        (torch.arange(bs, dtype=torch.int32).to('cpu') * nv)[:, None, None]
     vertices = vertices.reshape((bs * nv, 3))
     # pytorch only supports long and byte tensors for indexing
     return vertices[faces.long()]
@@ -72,9 +72,9 @@ def vertex_normals(vertices, faces):
     bs, nv = vertices.shape[:2]
     bs, nf = faces.shape[:2]
     device = vertices.device
-    normals = torch.zeros(bs * nv, 3).to(device)
+    normals = torch.zeros(bs * nv, 3).to('cpu')
 
-    faces = faces + (torch.arange(bs, dtype=torch.int32).to(device) * nv)[:, None, None
+    faces = faces + (torch.arange(bs, dtype=torch.int32).to('cpu') * nv)[:, None, None
                                                                          ]    # expanded faces
     vertices_faces = vertices.reshape((bs * nv, 3))[faces.long()]
 
@@ -374,9 +374,9 @@ def move_dict_to_device(dict, device, tensor2float=False):
     for k, v in dict.items():
         if isinstance(v, torch.Tensor):
             if tensor2float:
-                dict[k] = v.float().to(device)
+                dict[k] = v.float().to('cpu')
             else:
-                dict[k] = v.to(device)
+                dict[k] = v.to('cpu')
 
 
 def write_obj(

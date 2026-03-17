@@ -46,8 +46,8 @@ for name in os.listdir(root):
         target_lm_index = np.asarray(target_lm_index)
         target_lm_index = target_lm_index[None,...]
         lm_mask = target_lm_index > -1
-        target_lm_index = torch.from_numpy(target_lm_index).to(device).long()
-        lm_mask = torch.from_numpy(lm_mask).to(device).bool()
+        target_lm_index = torch.from_numpy(target_lm_index).to('cpu').long()
+        lm_mask = torch.from_numpy(lm_mask).to('cpu').bool()
         
         bfm_meshes, bfm_lm_index = load_bfm_model(torch.device('cuda:0'),data_dir)
 

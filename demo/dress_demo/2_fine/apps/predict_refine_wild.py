@@ -26,14 +26,14 @@ def test(opt):
     projection_mode = "orthogonal"
 
     # create net
-    netG = HGPIFuNetwNML(opt, projection_mode).to(device=cuda)
+    netG = HGPIFuNetwNML(opt, projection_mode).to('cpu')
 
     def set_eval():
         netG.eval()
 
 
     model_path = '../support_data/checkpoints/fine_garment.pth'
-    netG.load_state_dict(torch.load(model_path))
+    netG.load_state_dict(torch.load(model_path, map_location='cpu'))
 
     os.makedirs(opt.results_path, exist_ok=True)
         

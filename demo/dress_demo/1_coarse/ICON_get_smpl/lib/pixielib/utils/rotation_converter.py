@@ -348,7 +348,7 @@ def _compute_euler_from_matrix(dcm, seq='xyz', extrinsic=False):
     # angle offset is lambda from the paper referenced in [2] from docstring of
     # `as_euler` function
     offset = torch.atan2(sl, cl)
-    c = torch.stack((n2, torch.cross(n1, n2), n1)).type(dcm.dtype).to(device)
+    c = torch.stack((n2, torch.cross(n1, n2), n1)).type(dcm.dtype).to('cpu')
 
     # Step 3
     rot = torch.tensor([
@@ -361,7 +361,7 @@ def _compute_euler_from_matrix(dcm, seq='xyz', extrinsic=False):
     dcm_transformed = torch.einsum('...ij,jk->...ik', res, c.T @ rot)
 
     # Step 4
-    angles = torch.zeros((num_rotations, 3), dtype=dcm.dtype, device=device)
+    angles = torch.zeros((num_rotations, 3), dtype=dcm.dtype, device='cpu')
 
     # Ensure less than unit norm
     positive_unity = dcm_transformed[:, 2, 2] > 1
@@ -516,13 +516,13 @@ def batch_rodrigues(rot_vecs, epsilon=1e-8, dtype=torch.float32):
 
     # Bx1 arrays
     rx, ry, rz = torch.split(rot_dir, 1, dim=1)
-    K = torch.zeros((batch_size, 3, 3), dtype=dtype, device=device)
+    K = torch.zeros((batch_size, 3, 3), dtype=dtype, device='cpu')
 
-    zeros = torch.zeros((batch_size, 1), dtype=dtype, device=device)
+    zeros = torch.zeros((batch_size, 1), dtype=dtype, device='cpu')
     K = torch.cat([zeros, -rz, ry, rz, zeros, -rx, -ry, rx, zeros], dim=1) \
         .view((batch_size, 3, 3))
 
-    ident = torch.eye(3, dtype=dtype, device=device).unsqueeze(dim=0)
+    ident = torch.eye(3, dtype=dtype, device='cpu').unsqueeze(dim=0)
     rot_mat = ident + sin * K + (1 - cos) * torch.bmm(K, K)
     return rot_mat
 

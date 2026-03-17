@@ -78,7 +78,7 @@ def plot_mask3D(
         mask = mask.transpose(2, 1, 0)
 
         # marching cube to find surface
-        verts, faces, normals, values = measure.marching_cubes_lewiner(
+        verts, faces, normals, values = measure.marching_cubes(
             mask, 0.5, gradient_direction='ascent'
         )
 

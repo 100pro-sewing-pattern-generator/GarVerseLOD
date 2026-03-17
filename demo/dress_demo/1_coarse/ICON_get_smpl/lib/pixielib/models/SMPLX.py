@@ -981,7 +981,7 @@ class SMPLX(nn.Module):
         device = global_pose.device
         full_pose = torch.cat([global_pose, body_pose], dim=1)
         rel_rot_mat = (
-            torch.eye(3, device=device, dtype=dtype).unsqueeze_(dim=0).repeat(batch_size, 1, 1)
+            torch.eye(3, device='cpu', dtype=dtype).unsqueeze_(dim=0).repeat(batch_size, 1, 1)
         )
         for idx in kin_chain[1:]:
             rel_rot_mat = torch.bmm(full_pose[:, idx], rel_rot_mat)

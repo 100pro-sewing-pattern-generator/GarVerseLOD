@@ -69,8 +69,8 @@ def query_color(verts, faces, image, device):
         [np.float]: [return colors]
     """
 
-    verts = verts.float().to(device)
-    faces = faces.long().to(device)
+    verts = verts.float().to('cpu')
+    faces = faces.long().to('cpu')
 
     (xy, z) = verts.split([2, 1], dim=1)
     visibility = get_visibility(xy, z, faces[:, [0, 2, 1]]).flatten()
@@ -128,7 +128,7 @@ def orthogonal(points, calibrations, transforms=None):
 
 class Render:
     def __init__(self, size=512, device=torch.device("cuda:0")):
-        self.device = device
+        self.device = 'cpu'
         self.size = size
 
         # camera setting
@@ -329,7 +329,7 @@ class Render:
                 # print(calibrations)
                 # import trimesh
                 # mesh = trimesh.load("examples/1_0+16933095202341805_smpl.obj", process=False)
-                # verts = torch.from_numpy(mesh.vertices).transpose(1, 0).unsqueeze(0).float().cuda()
+                # verts = torch.from_numpy(mesh.vertices).transpose(1, 0).unsqueeze(0).float().cpu()
                 # # print(verts.shape)
                 # xyz = orthogonal(verts, calibrations)
                 # # print(xyz.shape)

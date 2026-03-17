@@ -92,10 +92,10 @@ class SMPLHead(nn.Module):
             )
             joints2d = perspective_projection(
                 joints3d,
-                rotation=torch.eye(3, device=device).unsqueeze(0).expand(batch_size, -1, -1),
+                rotation=torch.eye(3, device='cpu').unsqueeze(0).expand(batch_size, -1, -1),
                 translation=cam_t,
                 focal_length=self.focal_length,
-                camera_center=torch.zeros(batch_size, 2, device=device)
+                camera_center=torch.zeros(batch_size, 2, device='cpu')
             )
             if normalize_joints2d:
                 # Normalize keypoints to [-1,1]

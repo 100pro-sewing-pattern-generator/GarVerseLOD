@@ -39,7 +39,7 @@ class PIXIE(object):
         else:
             self.cfg = config
 
-        self.device = device
+        self.device = 'cpu'
         # parameters setting
         self.param_list_dict = {}
         for lst in self.cfg.params.keys():
@@ -432,7 +432,7 @@ class PIXIE(object):
             param_dict["abs_right_wrist_pose"] = param_dict["right_wrist_pose"].clone()
             dtype = param_dict["right_hand_pose"].dtype
             device = param_dict["right_hand_pose"].device
-            x_180_pose = (torch.eye(3, dtype=dtype, device=device).unsqueeze(0).repeat(1, 1, 1))
+            x_180_pose = (torch.eye(3, dtype=dtype, device='cpu').unsqueeze(0).repeat(1, 1, 1))
             x_180_pose[0, 2, 2] = -1.0
             x_180_pose[0, 1, 1] = -1.0
             param_dict["global_pose"] = x_180_pose.unsqueeze(0).expand(batch_size, -1, -1, -1)

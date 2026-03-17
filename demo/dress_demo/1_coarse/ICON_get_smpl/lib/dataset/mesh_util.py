@@ -33,12 +33,12 @@ from lib.common.render_utils import Pytorch3dRasterizer, face_vertices
 
 from pytorch3d.renderer.mesh import rasterize_meshes
 from PIL import Image, ImageFont, ImageDraw
-# from kaolin.ops.mesh import check_sign
-# from kaolin.metrics.trianglemesh import point_to_mesh_distance
+from kaolin.ops.mesh import check_sign
+from kaolin.metrics.trianglemesh import point_to_mesh_distance
 
 from pytorch3d.loss import (mesh_laplacian_smoothing, mesh_normal_consistency)
 
-# import tinyobjloader
+import tinyobjloader
 
 
 
@@ -109,7 +109,7 @@ class HoppeMesh:
 
 def tensor2variable(tensor, device):
     # [1,23,3,3]
-    return torch.tensor(tensor, device=device, requires_grad=True)
+    return torch.tensor(tensor, device='cpu', requires_grad=True)
 
 
 class GMoF(torch.nn.Module):
@@ -176,8 +176,8 @@ def remesh(mesh, obj_path, device):
         mesh, alpha=0.1, beta=0.5, iterations=10, laplacian_operator=None
     )
     mesh.export(obj_path)
-    verts_pr = torch.tensor(mesh.vertices).float().unsqueeze(0).to(device)
-    faces_pr = torch.tensor(mesh.faces).long().unsqueeze(0).to(device)
+    verts_pr = torch.tensor(mesh.vertices).float().unsqueeze(0).to('cpu')
+    faces_pr = torch.tensor(mesh.faces).long().unsqueeze(0).to('cpu')
 
     return verts_pr, faces_pr
 
@@ -244,7 +244,7 @@ def load_checkpoint(model, cfg):
     device = torch.device(f"cuda:{cfg['test_gpus'][0]}")
 
     if os.path.exists(cfg.resume_path) and cfg.resume_path.endswith("ckpt"):
-        main_dict = torch.load(cfg.resume_path, map_location=device)['state_dict']
+        main_dict = torch.load(cfg.resume_path, map_location='cpu')['state_dict']
 
         main_dict = {
             k: v
@@ -254,7 +254,7 @@ def load_checkpoint(model, cfg):
         print(colored(f"Resume MLP weights from {cfg.resume_path}", 'green'))
 
     if os.path.exists(cfg.normal_path) and cfg.normal_path.endswith("ckpt"):
-        normal_dict = torch.load(cfg.normal_path, map_location=device)['state_dict']
+        normal_dict = torch.load(cfg.normal_path, map_location='cpu')['state_dict']
 
         for key in normal_dict.keys():
             normal_dict = rename(normal_dict, key, key.replace("netG", "netG.normal_filter"))
@@ -269,8 +269,8 @@ def load_checkpoint(model, cfg):
     model_dict.update(normal_dict)
     model.load_state_dict(model_dict)
 
-    model.netG = model.netG.to(device)
-    model.reconEngine = model.reconEngine.to(device)
+    model.netG = model.netG.to('cpu')
+    model.reconEngine = model.reconEngine.to('cpu')
 
     model.netG.training = False
     model.netG.eval()
@@ -810,7 +810,7 @@ def get_optim_grid_image(per_loop_lst, loss=None, nrow=4, type='smpl'):
     else:
         print(f"{type} should be 'smpl' or 'cloth'")
 
-    grid_img = grid_img.resize((grid_img.size[0], grid_img.size[1]), Image.ANTIALIAS)
+    grid_img.resize((grid_img.size[0], grid_img.size[1]), Image.LANCZOS)
 
     return grid_img
 
@@ -824,8 +824,8 @@ def clean_mesh(verts, faces):
     comp_num = [mesh.vertices.shape[0] for mesh in mesh_lst]
     mesh_clean = mesh_lst[comp_num.index(max(comp_num))]
 
-    final_verts = torch.as_tensor(mesh_clean.vertices).float().to(device)
-    final_faces = torch.as_tensor(mesh_clean.faces).int().to(device)
+    final_verts = torch.as_tensor(mesh_clean.vertices).float().to('cpu')
+    final_faces = torch.as_tensor(mesh_clean.faces).int().to('cpu')
 
     return final_verts, final_faces
 

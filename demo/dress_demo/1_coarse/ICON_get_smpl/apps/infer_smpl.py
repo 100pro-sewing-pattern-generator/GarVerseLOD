@@ -283,12 +283,12 @@ if __name__ == "__main__":
 
         # The optimizer and variables
         optimed_pose = torch.tensor(
-            data["body_pose"], device=device, requires_grad=True
+            data["body_pose"], device='cpu', requires_grad=True
         )    # [1,23,3,3]
-        optimed_trans = torch.tensor(data["trans"], device=device, requires_grad=True)    # [3]
-        optimed_betas = torch.tensor(data["betas"], device=device, requires_grad=True)    # [1,10]
+        optimed_trans = torch.tensor(data["trans"], device='cpu', requires_grad=True)    # [3]
+        optimed_betas = torch.tensor(data["betas"], device='cpu', requires_grad=True)    # [1,10]
         optimed_orient = torch.tensor(
-            data["global_orient"], device=device, requires_grad=True
+            data["global_orient"], device='cpu', requires_grad=True
         )    # [1,1,3,3]
         optimizer_smpl = torch.optim.Adam(
             [optimed_pose, optimed_trans, optimed_betas, optimed_orient],
@@ -382,7 +382,7 @@ if __name__ == "__main__":
                 smpl_verts = (smpl_verts + optimed_trans) * data["scale"]
                 smpl_joints = (smpl_joints + optimed_trans) * data["scale"]
 
-            smpl_joints *= torch.tensor([1.0, 1.0, -1.0]).to(device)
+            smpl_joints *= torch.tensor([1.0, 1.0, -1.0]).to('cpu')
 
             if data["type"] == "smpl":
                 in_tensor["smpl_joint"] = smpl_joints[:, :24, :]
@@ -393,7 +393,7 @@ if __name__ == "__main__":
 
             # render optimized mesh (normal, T_normal, image [-1,1])
             in_tensor["T_normal_F"], in_tensor["T_normal_B"] = dataset.render_normal(
-                smpl_verts * torch.tensor([1.0, -1.0, -1.0]).to(device), in_tensor["smpl_faces"]
+                smpl_verts * torch.tensor([1.0, -1.0, -1.0]).to('cpu'), in_tensor["smpl_faces"]
             )
             T_normal_F_save = (
                 ((in_tensor["T_normal_F"][0].permute(1, 2, 0) + 1.0) * 255.0 /
@@ -415,8 +415,8 @@ if __name__ == "__main__":
             smpl_arr = torch.cat([T_mask_F, T_mask_B], dim=-1)[0]
             gt_arr = torch.cat([in_tensor["normal_F"][0], in_tensor["normal_B"][0]],
                                dim=2).permute(1, 2, 0)
-            gt_arr = ((gt_arr + 1.0) * 0.5).to(device)
-            bg_color = (torch.Tensor([0.5, 0.5, 0.5]).unsqueeze(0).unsqueeze(0).to(device))
+            gt_arr = ((gt_arr + 1.0) * 0.5).to('cpu')
+            bg_color = (torch.Tensor([0.5, 0.5, 0.5]).unsqueeze(0).unsqueeze(0).to('cpu'))
             gt_arr = ((gt_arr - bg_color).sum(dim=-1) != 0.0).float()
             diff_S = torch.abs(smpl_arr - gt_arr)
             losses["silhouette"]["value"] = diff_S.mean()
@@ -455,7 +455,7 @@ if __name__ == "__main__":
                 optimizer_smpl.step()
                 scheduler_smpl.step(smpl_loss)
             in_tensor["smpl_verts"] = smpl_verts * \
-                torch.tensor([1.0, 1.0, -1.0]).to(device)
+                torch.tensor([1.0, 1.0, -1.0]).to('cpu')
 
         # visualize the optimization process
         # 1. SMPL Fitting

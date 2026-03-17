@@ -60,10 +60,10 @@ def non_rigid_icp_mesh2pcl(
         The mesh should look at +z axis, the x define the width of mesh, and the y define the height of mesh
     '''
     
-    template_mesh = template_mesh.to(device)
-    target_pcl = target_pcl.to(device)
-    template_lm_index = template_lm_index.to(device)
-    target_lm_index = target_lm_index.to(device)
+    template_mesh = template_mesh.to('cpu')
+    target_pcl = target_pcl.to('cpu')
+    template_lm_index = template_lm_index.to('cpu')
+    target_lm_index = target_lm_index.to('cpu')
 
     template_vertex = template_mesh.verts_padded()
     target_vertex = target_pcl.points_padded()
@@ -90,7 +90,7 @@ def non_rigid_icp_mesh2pcl(
     # define the transformation model
     template_edges = template_mesh.edges_packed()
     if in_affine is None:
-        local_affine_model = LocalAffine(template_vertex.shape[1], template_vertex.shape[0], template_edges).to(device)
+        local_affine_model = LocalAffine(template_vertex.shape[1], template_vertex.shape[0], template_edges).to('cpu')
     else:
         local_affine_model = in_affine
     optimizer = torch.optim.AdamW([{'params': local_affine_model.parameters()}], lr=1e-4, amsgrad=True)

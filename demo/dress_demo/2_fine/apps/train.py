@@ -50,7 +50,7 @@ def train(opt):
     print('test data size: ', len(test_data_loader))
 
     # create net
-    netG = HGPIFuNet(opt, projection_mode).to(device=cuda)
+    netG = HGPIFuNet(opt, projection_mode).to('cpu')
     optimizerG = torch.optim.RMSprop(netG.parameters(), lr=opt.learning_rate, momentum=0, weight_decay=0)
     lr = opt.learning_rate
     print('Using Network: ', netG.name)
@@ -94,17 +94,17 @@ def train(opt):
             iter_start_time = time.time()
 
             # retrieve the data
-            image_tensor = train_data['img'].to(device=cuda)
-            calib_tensor = train_data['calib'].to(device=cuda)
-            sample_tensor = train_data['samples'].to(device=cuda)
-            int_tensor = train_data['intrinsic'].to(device=cuda)
+            image_tensor = train_data['img'].to('cpu')
+            calib_tensor = train_data['calib'].to('cpu')
+            sample_tensor = train_data['samples'].to('cpu')
+            int_tensor = train_data['intrinsic'].to('cpu')
 
             image_tensor, calib_tensor, int_tensor = reshape_multiview_tensors(image_tensor, calib_tensor, int_tensor)
 
             if opt.num_views > 1:
                 sample_tensor = reshape_sample_tensor(sample_tensor, opt.num_views)
 
-            label_tensor = train_data['labels'].to(device=cuda)
+            label_tensor = train_data['labels'].to('cpu')
 
             res, error = netG.forward(image_tensor, sample_tensor, calib_tensor, labels=label_tensor)
 

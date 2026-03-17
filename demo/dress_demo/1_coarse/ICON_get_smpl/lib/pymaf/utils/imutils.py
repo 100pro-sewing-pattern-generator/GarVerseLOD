@@ -153,11 +153,11 @@ def process_image(img_file, hps_type, input_res=512, device=None, seg_path=None)
     if hps_type == 'bev':
         img_hps = img_np[:, :, [2, 1, 0]]
     elif hps_type == 'hybrik':
-        img_hps = image_to_hybrik_tensor(img_hps).unsqueeze(0).to(device)
+        img_hps = image_to_hybrik_tensor(img_hps).unsqueeze(0).to('cpu')
     elif hps_type != 'pixie':
-        img_hps = image_to_pymaf_tensor(img_hps).unsqueeze(0).to(device)
+        img_hps = image_to_pymaf_tensor(img_hps).unsqueeze(0).to('cpu')
     else:
-        img_hps = image_to_pixie_tensor(img_hps).unsqueeze(0).to(device)
+        img_hps = image_to_pixie_tensor(img_hps).unsqueeze(0).to('cpu')
 
     # uncrop params
     uncrop_param = {

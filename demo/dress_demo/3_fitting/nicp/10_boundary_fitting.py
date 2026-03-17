@@ -16,8 +16,8 @@ import numpy as np
 def fit(src_obj, trg_obj, out_obj, device):
 
     verts_src, faces_src, aux = load_obj(src_obj)
-    faces_idx_src = faces_src.verts_idx.to(device)
-    verts_src = verts_src.to(device)
+    faces_idx_src = faces_src.verts_idx.to('cpu')
+    verts_src = verts_src.to('cpu')
 
     # We read the target 3D model using load_obj
     verts, faces, aux = load_obj(trg_obj)
@@ -25,8 +25,8 @@ def fit(src_obj, trg_obj, out_obj, device):
     # verts is a FloatTensor of shape (V, 3) where V is the number of vertices in the mesh
     # faces is an object which contains the following LongTensors: verts_idx, normals_idx and textures_idx
     # For this tutorial, normals and textures are ignored.
-    faces_idx = faces.verts_idx.to(device)
-    verts = verts.to(device)
+    faces_idx = faces.verts_idx.to('cpu')
+    verts = verts.to('cpu')
 
     # We scale normalize and center the target mesh to fit in a sphere of radius 1 centered at (0,0,0). 
     # (scale, center) will be used to bring the predicted mesh to its original center and scale
@@ -44,11 +44,11 @@ def fit(src_obj, trg_obj, out_obj, device):
     verts_src = verts_src + (center_norm - center_src_norm)
 
     # We construct a Meshes structure for the target mesh
-    src_mesh = Meshes(verts=[verts_src], faces=[faces_idx_src]).to(device)
+    src_mesh = Meshes(verts=[verts_src], faces=[faces_idx_src]).to('cpu')
     trg_mesh = Meshes(verts=[verts], faces=[faces_idx])
 
 
-    deform_verts = torch.full(src_mesh.verts_packed().shape, 0.0, device=device, requires_grad=True)
+    deform_verts = torch.full(src_mesh.verts_packed().shape, 0.0, device='cpu', requires_grad=True)
     optimizer = torch.optim.SGD([deform_verts], lr=1.0, momentum=0.9)
 
 

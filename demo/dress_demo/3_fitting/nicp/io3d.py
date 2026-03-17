@@ -33,7 +33,7 @@ def load_ply_as_pointcloud(fp, device = None):
     '''
     verts, _ = load_ply(fp)
     if not device is None:
-        verts = verts.to(device)
+        verts = verts.to('cpu')
     pointcloud = Pointclouds(points = [verts])
     return pointcloud
 

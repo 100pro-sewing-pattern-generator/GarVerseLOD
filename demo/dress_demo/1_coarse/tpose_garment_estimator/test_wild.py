@@ -26,7 +26,7 @@ to_tensor = transforms.Compose([
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
 embedding = Embedding(is_train=True)
-model_CKPT = torch.load("../../support_data/checkpoints/tpose_garment_estimator.pth")
+model_CKPT = torch.load("../../support_data/checkpoints/tpose_garment_estimator.pth", map_location='cpu')
 embedding.load_state_dict({k.replace('module.', ''):v for k,v in model_CKPT.items()})
 embedding.eval()
 
