@@ -1,9 +1,10 @@
 from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pathlib import Path
 import shutil
 import subprocess
 import os
+from datetime import datetime
 
 app = FastAPI()
 
@@ -14,9 +15,23 @@ OUTPUT_DIR = BASE_DIR / "outputs/temp"
 @app.post("/full_pipeline")
 async def full_pipeline(file: UploadFile = File(...)):
     try:
-        # 1. 入力画像保存
-        IMG_DIR.mkdir(parents=True, exist_ok=True)
-        file_path = IMG_DIR / file.filename
+        # ----------------------------
+        # 時間フォルダ作成 (inputs/imgs と outputs/temp 両方)
+        # ----------------------------
+        time_folder = datetime.now().strftime("%Y%m%d_%H%M%S")
+        img_time_dir = IMG_DIR / time_folder
+        img_time_dir.mkdir(parents=True, exist_ok=True)
+
+        coarse_temp_dir = OUTPUT_DIR / "coarse_temp" / time_folder
+        coarse_temp_dir.mkdir(parents=True, exist_ok=True)
+
+        coarse_garment_dir = OUTPUT_DIR / "coarse_garment" / time_folder
+        coarse_garment_dir.mkdir(parents=True, exist_ok=True)
+
+        # ----------------------------
+        # 入力画像保存
+        # ----------------------------
+        file_path = img_time_dir / file.filename
         with open(file_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
 
@@ -29,7 +44,7 @@ async def full_pipeline(file: UploadFile = File(...)):
             [
                 "python",
                 str(BASE_DIR / "0_normal_estimator/predict_normal.py"),
-                "--input_dir", str(IMG_DIR),
+                "--input_dir", str(img_time_dir),
                 "--output_dir", str(OUTPUT_DIR)
             ],
             check=True,
@@ -42,9 +57,6 @@ async def full_pipeline(file: UploadFile = File(...)):
         # ----------------------------
         # 1_coarse/ICON_get_smpl
         # ----------------------------
-        coarse_temp_dir = OUTPUT_DIR / "coarse_temp"
-        coarse_temp_dir.mkdir(parents=True, exist_ok=True)
-
         env_icon = os.environ.copy()
         env_icon["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -53,7 +65,7 @@ async def full_pipeline(file: UploadFile = File(...)):
                 "python", "-m", "apps.infer_smpl",
                 "-cfg", "./configs/icon-filter.yaml",
                 "-gpu", "0",
-                "-in_dir", str(IMG_DIR),
+                "-in_dir", str(img_time_dir),
                 "-out_dir", str(coarse_temp_dir),
                 "-export_video",
                 "-loop_smpl", "1",
@@ -71,14 +83,13 @@ async def full_pipeline(file: UploadFile = File(...)):
         # ----------------------------
         # 1_coarse/tpose_garment_estimator
         # ----------------------------
-        coarse_temp_dir.mkdir(parents=True, exist_ok=True)
         env_tpose = os.environ.copy()
         env_tpose["CUDA_VISIBLE_DEVICES"] = "0"
 
         result2 = subprocess.run(
             [
                 "python", "test_wild.py",
-                "--in_folder", str(IMG_DIR),
+                "--in_folder", str(img_time_dir),
                 "--out_folder", str(coarse_temp_dir)
             ],
             check=True,
@@ -90,18 +101,15 @@ async def full_pipeline(file: UploadFile = File(...)):
         logs["tpose_garment"] = {"stdout": result2.stdout, "stderr": result2.stderr}
 
         # ----------------------------
-        # pose_garment.py
+        # 1_coarse/smpl_lbs_to_garment/pose_garment.py
         # ----------------------------
-        coarse_garment_dir = OUTPUT_DIR / "coarse_garment"
-        coarse_garment_dir.mkdir(parents=True, exist_ok=True)
-
         env_pose = os.environ.copy()
         env_pose["CUDA_VISIBLE_DEVICES"] = "0"
 
         result3 = subprocess.run(
             [
                 "python", "pose_garment.py",
-                "--in_folder", str(IMG_DIR),
+                "--in_folder", str(img_time_dir),
                 "--out_folder", str(coarse_garment_dir),
                 "--temp", str(coarse_temp_dir)
             ],
@@ -113,13 +121,18 @@ async def full_pipeline(file: UploadFile = File(...)):
         )
         logs["pose_garment"] = {"stdout": result3.stdout, "stderr": result3.stderr}
 
-        return JSONResponse(content={
-            "status": "success",
-            "logs": logs,
-            "file_saved": str(file_path),
-            "coarse_temp_dir": str(coarse_temp_dir),
-            "coarse_garment_dir": str(coarse_garment_dir)
-        })
+        # ----------------------------
+        # coarse_temp の時間フォルダを ZIP に
+        # ----------------------------
+        zip_path = OUTPUT_DIR / f"coarse_temp_{time_folder}.zip"
+        shutil.make_archive(base_name=str(zip_path.with_suffix('')), format='zip', root_dir=str(coarse_temp_dir))
+
+        # ZIP を返す
+        return FileResponse(
+            path=str(zip_path),
+            media_type="application/zip",
+            filename=f"coarse_temp_{time_folder}.zip"
+        )
 
     except subprocess.CalledProcessError as e:
         print(e)
