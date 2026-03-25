@@ -11,6 +11,7 @@ from numpy import cross, eye, dot
 import argparse
 import cv2
 import shutil
+from pathlib import Path
 
 def M(axis, theta):
     return expm(cross(eye(3), axis/norm(axis)*theta))
@@ -156,60 +157,78 @@ if __name__ == '__main__':
     temp_outputs = args.temp_outputs
     outputs = args.out_folder
     os.makedirs(outputs, exist_ok=True)
+    # ここから修正版
     for f in os.listdir(in_dir):
         name = f[0:-4]
-        garment_path = temp_outputs + name + "_garment_on_mean_body.obj"
-        npz_path = temp_outputs + name + "_smpl.npz"
 
-        shutil.copyfile(in_dir + f, outputs + f)
+        temp_outputs = Path(temp_outputs)
+        outputs = Path(outputs)
+
+        garment_path = temp_outputs / f"{name}_garment_on_mean_body.obj"
+        npz_path = temp_outputs / f"{name}_smpl.npz"
+
+        # 入力画像コピー
+        src = Path(in_dir) / f
+        dst = outputs / f
+        shutil.copyfile(src, dst)
 
         smpl_model = SMPL(sex='neutral', model_dir='../../support_data/smpl_models/')
         smpl_params = dict(np.load(npz_path, allow_pickle=True))
         smpl_params = smpl_params["arr_0"][()]
-        pose_params = smpl_params['pose_param'].reshape(-1) # np.zeros(72) # smpl_params['pose_param'].reshape(-1) 要不要 pose blend shape
+        pose_params = smpl_params['pose_param'].reshape(-1)
         shape_params = smpl_params['betas'].reshape(-1)
-        scale = smpl_params["scale"] # render + optimize 
+        scale = smpl_params["scale"]
         trans = smpl_params["trans"]
 
         verts, _, hv_t_w_spbs, Jtr_T = smpl_model(pose_params, shape_params)
 
         spbs_body = trimesh.Trimesh(vertices=hv_t_w_spbs, faces=smpl_model.faces, process=False)
-        spbs_body.export(temp_outputs + name + "_tpose_spbs_human.obj")
-        spbs_body.vertices, spbs_body.faces = trimesh.remesh.subdivide_loop(vertices=spbs_body.vertices, faces=smpl_model.faces, iterations=iterations)
+        output_file = temp_outputs / f"{name}_tpose_spbs_human.obj"
+        spbs_body.export(output_file)
+        spbs_body.vertices, spbs_body.faces = trimesh.remesh.subdivide_loop(
+            vertices=spbs_body.vertices, faces=smpl_model.faces, iterations=iterations
+        )
 
         # tpose garment on mean body shape
-        garment_on_mean_body = trimesh.load(garment_path, process=False) # 3
-        garment_vertices_on_spbs_body, t_ii = get_garment_on_spbs_body(mean_body, spbs_body, garment_on_mean_body)  
+        garment_on_mean_body = trimesh.load(garment_path, process=False)
+        garment_vertices_on_spbs_body, t_ii = get_garment_on_spbs_body(mean_body, spbs_body, garment_on_mean_body)
 
-        garment_on_spbs_body = trimesh.Trimesh(vertices=garment_vertices_on_spbs_body, faces=garment_on_mean_body.faces, process=False)
-        garment_on_spbs_body.export(temp_outputs + name + "_tpose_spbs_garment.obj")
+        garment_on_spbs_body = trimesh.Trimesh(vertices=garment_vertices_on_spbs_body,
+                                            faces=garment_on_mean_body.faces, process=False)
+        garment_on_spbs_body.export(temp_outputs / f"{name}_tpose_spbs_garment.obj")
 
-        smpl_layer = SMPL_Layer(
-            center_idx=0,
-            gender='neutral',
-            model_root='../../support_data/smpl_models/')
-        hv_t_w_spbs = torch.from_numpy(hv_t_w_spbs).float().unsqueeze(0)
+        smpl_layer = SMPL_Layer(center_idx=0, gender='neutral', model_root='../../support_data/smpl_models/')
+        hv_t_w_spbs_tensor = torch.from_numpy(hv_t_w_spbs).float().unsqueeze(0)
         Jtr = torch.from_numpy(Jtr_T).float().unsqueeze(0)
         parents = smpl_layer.kintree_parents
         weights = smpl_layer.th_weights
         poses = smpl_params['pose_param'].reshape(-1)
         A = get_rigid_transformation(poses.reshape(24, 3), Jtr[0].numpy(), np.array(parents), return_joints=False)
 
-        posed_verts = tpose_points_to_pose_points(hv_t_w_spbs, weights[None, ...].permute(0, 2, 1), torch.from_numpy(A))[0]
+        posed_verts = tpose_points_to_pose_points(hv_t_w_spbs_tensor, weights[None, ...].permute(0, 2, 1), torch.from_numpy(A))[0]
         posed_verts = post_process(posed_verts)
         spbs_body_with_pose = trimesh.Trimesh(vertices=posed_verts, faces=smpl_model.faces, process=False)
-        spbs_body_with_pose.export(temp_outputs + name + "_lbs_spbs_human.obj")
+        spbs_body_with_pose.export(temp_outputs / f"{name}_lbs_spbs_human.obj")
         spbs_body_with_pose.vertices = post_process_align(spbs_body_with_pose.vertices)
-        spbs_body_with_pose.export(outputs + name + "_lbs_spbs_human_modified.obj")
+        spbs_body_with_pose.export(outputs / f"{name}_lbs_spbs_human_modified.obj")
 
-
-        garment_bw, _ = sample_blend_closest_points(torch.from_numpy(garment_vertices_on_spbs_body)[None, ...].float(), hv_t_w_spbs, weights.float())
-        posed_garment_verts = tpose_points_to_pose_points(torch.from_numpy(garment_vertices_on_spbs_body)[None, ...], garment_bw.permute(0, 2, 1), torch.from_numpy(A))[0]
+        garment_bw, _ = sample_blend_closest_points(
+            torch.from_numpy(garment_vertices_on_spbs_body)[None, ...].float(),
+            hv_t_w_spbs_tensor,
+            weights.float()
+        )
+        posed_garment_verts = tpose_points_to_pose_points(
+            torch.from_numpy(garment_vertices_on_spbs_body)[None, ...],
+            garment_bw.permute(0, 2, 1),
+            torch.from_numpy(A)
+        )[0]
         posed_garment_verts = post_process(posed_garment_verts)
-        garment_on_spbs_body_with_pose = trimesh.Trimesh(vertices=posed_garment_verts, faces=garment_on_mean_body.faces, process=False)
-        garment_on_spbs_body_with_pose.export(temp_outputs + name + "_lbs_spbs_garment.obj")
+        garment_on_spbs_body_with_pose = trimesh.Trimesh(vertices=posed_garment_verts,
+                                                        faces=garment_on_mean_body.faces, process=False)
+        garment_on_spbs_body_with_pose.export(temp_outputs / f"{name}_lbs_spbs_garment.obj")
         garment_on_spbs_body_with_pose.vertices = post_process_align(garment_on_spbs_body_with_pose.vertices)
-        garment_on_spbs_body_with_pose.export(outputs + name + "_lbs_spbs_garment_modified.obj")
+        garment_on_spbs_body_with_pose.export(outputs / f"{name}_lbs_spbs_garment_modified.obj")
+
         print(name)
 
 
