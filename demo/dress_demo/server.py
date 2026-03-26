@@ -137,17 +137,14 @@ async def full_pipeline(file: UploadFile = File(...)):
         )
         logs["pose_garment"] = {"stdout": result3.stdout, "stderr": result3.stderr}
 
-        # ----------------------------
-        # coarse_temp の時間フォルダを ZIP に
-        # ----------------------------
-        zip_path = OUTPUT_DIR / f"coarse_temp_{time_folder}.zip"
-        shutil.make_archive(base_name=str(zip_path.with_suffix('')), format='zip', root_dir=str(coarse_temp_dir))
+        file_stem = Path(file_path).stem
 
-        # ZIP を返す
+        obj_path = coarse_temp_dir / f"{file_stem}_tpose_spbs_garment.obj"
+
         return FileResponse(
-            path=str(zip_path),
-            media_type="application/zip",
-            filename=f"coarse_temp_{time_folder}.zip"
+            path=str(obj_path),
+            media_type="application/octet-stream",
+            filename= f"{file_stem}_tpose_smpl_garment.obj"
         )
 
     except subprocess.CalledProcessError as e:
