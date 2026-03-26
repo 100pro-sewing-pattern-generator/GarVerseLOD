@@ -7,16 +7,28 @@ import os
 from datetime import datetime
 from resize import resize_to_power_of_two, remove_background
 from PIL import Image
-
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:5173",  # React (Vite)
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 BASE_DIR = Path(__file__).parent
 IMG_DIR = BASE_DIR / "inputs/imgs"
 OUTPUT_DIR = BASE_DIR / "outputs/temp"
 
-@app.post("/full_pipeline")
-async def full_pipeline(file: UploadFile = File(...)):
+@app.post("/image-to-obj")
+async def imageToObj(file: UploadFile = File(...)):
     try:
         # ----------------------------
         # 時間フォルダ作成 (inputs/imgs と outputs/temp 両方)
