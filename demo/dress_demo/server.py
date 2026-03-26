@@ -5,6 +5,9 @@ import shutil
 import subprocess
 import os
 from datetime import datetime
+from resize import resize_to_power_of_two, remove_background
+from PIL import Image
+
 
 app = FastAPI()
 
@@ -31,9 +34,22 @@ async def full_pipeline(file: UploadFile = File(...)):
         # ----------------------------
         # 入力画像保存
         # ----------------------------
+
+        # 入力画像のresize
         file_path = img_time_dir / file.filename
         with open(file_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
+
+        if file_path.suffix.lower() == ".avif":
+            img = Image.open(file_path).convert("RGB")
+            png_path = os.path.splitext(file_path)[0] + ".png"
+            img.save(png_path)
+            os.remove(file_path)  # 元の AVIF 削除
+            file_path = png_path
+
+        file_path = resize_to_power_of_two(file_path)
+        file_path = remove_background(file_path)
+
 
         logs = {}
 
