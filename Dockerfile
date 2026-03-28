@@ -36,7 +36,7 @@ RUN pip install pillow-avif-plugin
 
 RUN pip install python-multipart
 # アプリコードを最後にコピー
-COPY . /workspace
+COPY . /workspace/GarVerseLOD
 WORKDIR /workspace/GarVerseLOD/demo/dress_demo/
 
 CMD ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
