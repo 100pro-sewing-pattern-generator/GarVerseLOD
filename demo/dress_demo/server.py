@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import os
 from datetime import datetime
-from resize import resize_to_power_of_two, remove_background
+from resize import resize_to_power_of_two, remove_background, resize_to_512
 from PIL import Image
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -59,7 +59,7 @@ async def imageToObj(file: UploadFile = File(...)):
             os.remove(file_path)  # 元の AVIF 削除
             file_path = png_path
 
-        file_path = resize_to_power_of_two(file_path)
+        file_path = resize_to_512(file_path)
         file_path = remove_background(file_path)
 
 
